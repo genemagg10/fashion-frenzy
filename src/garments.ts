@@ -1073,9 +1073,10 @@ export function stitchLayout(sketchId: SketchId): { pins: Pt[]; stitch: Pt[]; sn
       { x: measure.cx + 16, y: measure.waistY },
     ];
   }
+  const spread = Math.max(measure.waistHW + 36, 96);
   const snips = [
-    { x: stitch[0].x - 8, y: stitch[0].y - 6 },
-    { x: stitch[stitch.length - 1].x + 8, y: stitch[stitch.length - 1].y - 6 },
+    { x: measure.cx - spread, y: measure.waistY - 24 },
+    { x: measure.cx + spread, y: measure.waistY - 24 },
   ];
   return { pins, stitch, snips };
 }
@@ -1087,7 +1088,7 @@ function paperDecor(sketchId: SketchId): string {
   const pinDots = pins
     .map(
       (p, i) => `<g class="pin-spot" data-i="${i}">
-        <circle class="pin-hit" data-act="pin" data-i="${i}" cx="${p.x}" cy="${p.y}" r="28" fill="transparent"/>
+        <circle class="pin-hit" data-act="pin" data-i="${i}" cx="${p.x}" cy="${p.y}" r="36" fill="#fff" fill-opacity="0.02"/>
         <circle class="pin-ring" cx="${p.x}" cy="${p.y}" r="16" fill="none" stroke="#e56b93" stroke-width="2"/>
         <circle class="pin-head" cx="${p.x}" cy="${p.y}" r="7" fill="#f4b8c8" stroke="#a33b5c" stroke-width="1.5"/>
       </g>`,
@@ -1095,11 +1096,15 @@ function paperDecor(sketchId: SketchId): string {
     .join('');
   const snipDots = snips
     .map(
-      (p, i) => `<g class="snip-spot" data-i="${i}">
-        <path d="M ${p.x - 10} ${p.y} q 8 -16 18 -6" fill="none" stroke="#c23b5a" stroke-width="2" stroke-linecap="round"/>
-        <circle class="pin-hit" data-act="snip" data-i="${i}" cx="${p.x}" cy="${p.y}" r="26" fill="transparent"/>
-        <circle cx="${p.x}" cy="${p.y}" r="8" fill="#fff7ea" stroke="#c23b5a" stroke-width="2"/>
-      </g>`,
+      (p, i) => {
+        const end = i === 0 ? stitch[0] : stitch[stitch.length - 1];
+        return `<g class="snip-spot" data-i="${i}">
+        <path d="M ${end.x} ${end.y} Q ${(end.x + p.x) / 2} ${end.y - 28} ${p.x} ${p.y}" fill="none" stroke="#c23b5a" stroke-width="4" stroke-linecap="round"/>
+        <circle class="snip-ring" cx="${p.x}" cy="${p.y}" r="26" fill="none" stroke="#e56b93" stroke-width="3"/>
+        <circle class="snip-hit" data-act="snip" data-id="${i}" data-i="${i}" cx="${p.x}" cy="${p.y}" r="44" fill="#fff" fill-opacity="0.02"/>
+        <circle cx="${p.x}" cy="${p.y}" r="14" fill="#fff7ea" stroke="#c23b5a" stroke-width="3"/>
+      </g>`;
+      },
     )
     .join('');
   return `${pinDots}
