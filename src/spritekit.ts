@@ -226,49 +226,187 @@ export function swatchURL(pattern: FabricId, hex: string): string {
   return c.toDataURL('image/png');
 }
 
-export function trimURL(id: string): string {
+const trimCache = new Map<string, string>();
+
+function paintTrim(draw: (g: CanvasRenderingContext2D) => void): string {
   const c = document.createElement('canvas');
-  c.width = 32;
-  c.height = 32;
+  c.width = 160;
+  c.height = 160;
   const g = c.getContext('2d');
   if (!g) return '';
-  g.fillStyle = '#fff4ea';
-  g.fillRect(0, 0, 32, 32);
-  g.fillStyle = '#e56b93';
-  if (id === 'bow') {
-    g.beginPath();
-    g.arc(10, 16, 6, 0, Math.PI * 2);
-    g.arc(22, 16, 6, 0, Math.PI * 2);
-    g.fill();
-  } else if (id === 'buttons') {
-    g.fillStyle = '#f2c14e';
-    for (const y of [8, 16, 24]) g.beginPath(), g.arc(16, y, 3, 0, Math.PI * 2), g.fill();
-  } else if (id === 'belt') {
-    g.fillStyle = '#f2c14e';
-    g.fillRect(4, 13, 24, 6);
-  } else if (id === 'hat') {
-    g.fillStyle = '#3a241c';
-    g.beginPath();
-    g.ellipse(16, 18, 10, 5, 0, 0, Math.PI * 2);
-    g.fill();
-  } else if (id === 'bag') {
-    g.fillStyle = '#e7a05a';
-    g.fillRect(8, 12, 16, 12);
-  } else if (id === 'shoes') {
-    g.fillStyle = '#c23b4b';
-    g.beginPath();
-    g.ellipse(11, 20, 6, 3, 0, 0, Math.PI * 2);
-    g.ellipse(21, 20, 6, 3, 0, 0, Math.PI * 2);
-    g.fill();
-  } else {
-    g.fillStyle = '#fff6d0';
-    for (const [x, y] of [[8, 10], [20, 16], [12, 22]] as const) {
-      g.beginPath();
-      g.arc(x, y, 2, 0, Math.PI * 2);
-      g.fill();
-    }
-  }
+  g.imageSmoothingEnabled = true;
+  g.lineJoin = 'round';
+  g.lineCap = 'round';
+  draw(g);
   return c.toDataURL('image/png');
+}
+
+function ribbonBow(g: CanvasRenderingContext2D): void {
+  const ink = '#9a3d55';
+  g.lineWidth = 7;
+  g.strokeStyle = ink;
+  g.fillStyle = '#f07aa3';
+  g.beginPath();
+  g.moveTo(80, 72);
+  g.bezierCurveTo(18, 8, 4, 58, 28, 86);
+  g.bezierCurveTo(8, 124, 46, 128, 80, 90);
+  g.closePath();
+  g.fill();
+  g.stroke();
+  g.beginPath();
+  g.moveTo(80, 72);
+  g.bezierCurveTo(142, 8, 156, 58, 132, 86);
+  g.bezierCurveTo(152, 124, 114, 128, 80, 90);
+  g.closePath();
+  g.fill();
+  g.stroke();
+  g.fillStyle = '#e05686';
+  g.beginPath();
+  g.moveTo(72, 92);
+  g.lineTo(40, 150);
+  g.quadraticCurveTo(58, 142, 66, 128);
+  g.lineTo(80, 104);
+  g.lineTo(94, 128);
+  g.quadraticCurveTo(102, 142, 120, 150);
+  g.lineTo(88, 92);
+  g.closePath();
+  g.fill();
+  g.stroke();
+  g.fillStyle = '#c23b5a';
+  g.beginPath();
+  g.ellipse(80, 82, 16, 14, 0, 0, Math.PI * 2);
+  g.fill();
+  g.stroke();
+  g.fillStyle = 'rgba(255,255,255,.75)';
+  g.beginPath();
+  g.ellipse(48, 58, 14, 8, -0.7, 0, Math.PI * 2);
+  g.fill();
+  g.beginPath();
+  g.ellipse(112, 58, 14, 8, 0.7, 0, Math.PI * 2);
+  g.fill();
+}
+
+export function trimURL(id: string): string {
+  const hit = trimCache.get(id);
+  if (hit) return hit;
+  const url = paintTrim((g) => {
+    const ink = '#8a5a48';
+    g.lineWidth = 6;
+    g.strokeStyle = ink;
+    if (id === 'bow') {
+      ribbonBow(g);
+    } else if (id === 'buttons') {
+      g.fillStyle = '#f7c3d4';
+      g.beginPath();
+      g.roundRect(36, 14, 88, 132, 28);
+      g.fill();
+      g.stroke();
+      for (const y of [48, 80, 112]) {
+        g.fillStyle = '#f6d56b';
+        g.beginPath();
+        g.arc(80, y, 16, 0, Math.PI * 2);
+        g.fill();
+        g.stroke();
+        g.strokeStyle = '#a67c3a';
+        g.lineWidth = 3;
+        g.beginPath();
+        g.moveTo(74, y - 6);
+        g.lineTo(86, y + 6);
+        g.moveTo(86, y - 6);
+        g.lineTo(74, y + 6);
+        g.stroke();
+        g.strokeStyle = ink;
+        g.lineWidth = 6;
+      }
+    } else if (id === 'shoes') {
+      const shoe = (x: number) => {
+        g.fillStyle = '#f07aa3';
+        g.beginPath();
+        g.moveTo(x + 8, 78);
+        g.quadraticCurveTo(x + 10, 46, x + 36, 42);
+        g.quadraticCurveTo(x + 62, 40, x + 70, 70);
+        g.lineTo(x + 74, 108);
+        g.quadraticCurveTo(x + 40, 122, x + 8, 108);
+        g.closePath();
+        g.fill();
+        g.stroke();
+        g.fillStyle = '#fff';
+        g.fillRect(x + 6, 102, 70, 12);
+        g.strokeRect(x + 6, 102, 70, 12);
+        g.fillStyle = '#fff6d0';
+        g.beginPath();
+        g.ellipse(x + 36, 62, 8, 5, 0, 0, Math.PI * 2);
+        g.fill();
+      };
+      shoe(6);
+      shoe(78);
+    } else if (id === 'belt') {
+      g.fillStyle = '#e7a05a';
+      g.beginPath();
+      g.roundRect(14, 62, 132, 36, 16);
+      g.fill();
+      g.stroke();
+      g.fillStyle = '#f6d56b';
+      g.beginPath();
+      g.roundRect(64, 54, 32, 52, 8);
+      g.fill();
+      g.stroke();
+      g.strokeStyle = '#a67c3a';
+      g.lineWidth = 3;
+      g.strokeRect(74, 66, 12, 16);
+    } else if (id === 'hat') {
+      g.fillStyle = '#c23b4b';
+      g.beginPath();
+      g.ellipse(80, 108, 58, 16, 0, 0, Math.PI * 2);
+      g.fill();
+      g.stroke();
+      g.beginPath();
+      g.ellipse(80, 78, 40, 34, 0, Math.PI, 0);
+      g.fill();
+      g.stroke();
+      g.fillStyle = 'rgba(255,255,255,.45)';
+      g.beginPath();
+      g.ellipse(66, 64, 10, 6, -0.4, 0, Math.PI * 2);
+      g.fill();
+    } else if (id === 'bag') {
+      g.strokeStyle = '#a67c3a';
+      g.lineWidth = 6;
+      g.beginPath();
+      g.arc(80, 58, 28, Math.PI, 0);
+      g.stroke();
+      g.fillStyle = '#e8943a';
+      g.strokeStyle = ink;
+      g.beginPath();
+      g.roundRect(36, 62, 88, 72, 22);
+      g.fill();
+      g.stroke();
+      g.fillStyle = '#f6d56b';
+      g.beginPath();
+      g.arc(80, 98, 8, 0, Math.PI * 2);
+      g.fill();
+    } else {
+      g.fillStyle = '#f6d56b';
+      const star = (x: number, y: number, r: number) => {
+        g.beginPath();
+        for (let i = 0; i < 8; i += 1) {
+          const rad = i % 2 === 0 ? r : r * 0.4;
+          const a = -Math.PI / 2 + (i * Math.PI) / 4;
+          const px = x + Math.cos(a) * rad;
+          const py = y + Math.sin(a) * rad;
+          if (i === 0) g.moveTo(px, py);
+          else g.lineTo(px, py);
+        }
+        g.closePath();
+        g.fill();
+        g.stroke();
+      };
+      star(80, 70, 36);
+      star(40, 118, 16);
+      star(122, 112, 14);
+    }
+  });
+  trimCache.set(id, url);
+  return url;
 }
 
 export function puppyURL(): string {

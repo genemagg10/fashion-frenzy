@@ -239,6 +239,9 @@ function neededFiles(): string[] {
       extra.push(`sprites/models/tint/${look.sketchId}.png`, `sprites/models/tint/${look.sketchId}.mask.png`);
     }
   }
+  if (session.scene === 'reaction' && session.lastOutfit) {
+    extra.push(`sprites/forms/${session.lastOutfit.sketchId}.png`, `sprites/forms/${session.lastOutfit.sketchId}.mask.png`);
+  }
   if (session.scene === 'lookbook' || session.scene === 'awards') {
     const looks = session.scene === 'lookbook' ? save.lookbook : (session.show?.looks ?? []);
     for (const look of looks) extra.push(`sprites/forms/${look.sketchId}.png`, `sprites/forms/${look.sketchId}.mask.png`);
@@ -985,7 +988,7 @@ function finishControls(draft: Draft): string {
   const owned = ACCESSORIES.filter((item) => save.accessories.includes(item.id));
   return `<div class="patterns trims">${owned
     .map((item) => `<button type="button" class="pat ${draft.accessories.includes(item.id) ? 'on' : ''}" data-act="accessory" data-id="${item.id}">
-        <i class="trim-icon"><img class="pixel" alt="" width="32" height="32" src="${trimURL(item.id)}"></i><span>${esc(item.name)}</span>
+        <i class="trim-icon"><img alt="" src="${trimURL(item.id)}"></i><span>${esc(item.name)}</span>
       </button>`)
     .join('')}</div>`;
 }
@@ -1517,12 +1520,17 @@ function reactionScene(): string {
     return `${hud()}<section class="panel"><button class="btn" type="button" data-act="next-customer">Back to the shop</button></section>`;
   }
   const saved = save.lookbook.some((look) => look.id === outfit.id);
+  const mood = score.review >= 4 ? 'love' : score.review <= 2 ? 'disappointed' : score.mood === 'think' ? 'thinking' : 'happy';
   return `${hud()}
     <div class="reaction">
       ${score.sparkle ? confetti() : ''}
       ${hearts()}
-      <div class="reaction-person">${renderPerson({ look: customer, outfit, pose: 'twirl', uid: nextId('react') })}</div>
+      <div class="reaction-stage">
+        ${renderDressForm(outfit, nextId('react'))}
+        <img class="sprite reaction-bust ${mood === 'love' ? 'cheer' : ''}" alt="" src="${customerBust(customer.id, mood)}">
+      </div>
       <section class="panel slim">
+        <div class="panel-scroll">
         <div class="review-head">
           <div class="review-face"><img class="sprite sprite-bust" alt="" src="${customerBust(customer.id, score.review >= 4 ? 'love' : score.review <= 2 ? 'disappointed' : score.mood === 'think' ? 'thinking' : 'happy')}"></div>
           <div>
@@ -1542,9 +1550,12 @@ function reactionScene(): string {
           <li class="total"><span>Paid</span><b>${score.coins} coins</b></li>
         </ul>
         ${pip(pipLine())}
-        <button class="btn" type="button" data-act="save-look">${saved ? 'Saved in the lookbook' : 'Keep in my lookbook'}</button>
-        <button class="btn secondary" type="button" data-act="share-look">Save a picture</button>
-        <button class="btn ghost" type="button" data-act="next-customer">Next customer</button>
+        </div>
+        <div class="panel-dock">
+          <button class="btn" type="button" data-act="save-look">${saved ? 'Saved in the lookbook' : 'Keep in my lookbook'}</button>
+          <button class="btn secondary" type="button" data-act="share-look">Save a picture</button>
+          <button class="btn secondary" type="button" data-act="next-customer">Next customer</button>
+        </div>
       </section>
     </div>`;
 }
@@ -2027,7 +2038,7 @@ function walk(slot: HTMLElement, duration: number): Promise<void> {
     const stageH = stage?.clientHeight || window.innerHeight;
     const header = document.querySelector('.runway-bar') as HTMLElement | null;
     const namecard = document.querySelector('.namecard') as HTMLElement | null;
-    const clearance = (header?.offsetHeight ?? 64) + 20;
+    const clearance = (header?.offsetHeight ?? 64) + 28;
     const floorGap = (namecard?.offsetHeight ?? 72) + 28;
     const naturalH = Math.max(1, slot.offsetHeight);
     const start = performance.now();
@@ -2043,7 +2054,7 @@ function walk(slot: HTMLElement, duration: number): Promise<void> {
       const u = Math.min(1, (now - start) / duration);
       const sway = Math.sin(u * Math.PI * 7) * 8;
       let bottom = stageH * (0.46 - u * 0.28);
-      let scale = 0.48 + u * 0.42;
+      let scale = 0.64 + u * 0.56;
       if (bottom < floorGap) bottom = floorGap;
       const room = (stageH - bottom - clearance) / naturalH;
       if (scale > room) scale = Math.max(0.34, room);
