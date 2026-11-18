@@ -1,4 +1,4 @@
-import { darken } from './color';
+import { darken, lighten } from './color';
 import { renderGarment } from './garments';
 import type { Outfit, PersonLook } from './types';
 
@@ -68,7 +68,7 @@ function hairBack(look: PersonLook): string {
 function hairFront(look: PersonLook): string {
   const c = look.hairColor;
   if (look.hair === 'bob') {
-    return `<path d="M84 92 Q120 74 156 92 Q146 114 120 110 Q96 114 84 92 Z" fill="${c}"/>`;
+    return `<path d="M86 78 Q120 62 154 78 Q148 92 120 90 Q92 92 86 78 Z" fill="${c}"/>`;
   }
   if (look.hair === 'hijab') {
     return `<path d="M82 90 Q120 68 158 90 Q150 108 120 104 Q90 108 82 90 Z" fill="${c}"/>
@@ -79,54 +79,51 @@ function hairFront(look: PersonLook): string {
     return `<circle cx="92" cy="78" r="10" fill="${c}"/><circle cx="148" cy="78" r="10" fill="${c}"/><circle cx="120" cy="70" r="9" fill="${c}"/>`;
   }
   if (look.hair === 'waves') {
-    return `<path d="M92 86 Q120 74 148 88 Q132 100 120 96 Q108 100 92 86 Z" fill="${c}"/>`;
+    return `<path d="M94 76 Q120 64 146 78 Q136 90 120 86 Q104 90 94 76 Z" fill="${c}"/>`;
   }
   return '';
 }
 
 function face(look: PersonLook, pose: Pose): string {
-  const blush = look.blush ?? '#e7a0a8';
-  const smile =
-    pose === 'cheer' || pose === 'twirl'
-      ? `<path d="M108 122 Q120 136 132 122 Q120 130 108 122 Z" fill="#c45b6a"/>`
-      : `<path d="M108 120 Q120 132 132 120" fill="none" stroke="#b55268" stroke-width="2.2" stroke-linecap="round"/>`;
+  const blush = look.blush ?? '#e48b98';
+  const excited = pose === 'cheer' || pose === 'twirl';
+  const smile = excited
+    ? `<path d="M106 118 Q120 136 134 118 Q120 128 106 118 Z" fill="#c4475c"/>
+       <path d="M112 122 Q120 128 128 122" fill="#fff" opacity="0.55"/>`
+    : `<path d="M106 118 Q120 132 134 118" fill="none" stroke="#b5475c" stroke-width="2.4" stroke-linecap="round"/>`;
   const freckleDots = look.freckles
     ? [
-        [100, 116],
-        [108, 120],
-        [112, 114],
-        [132, 116],
-        [140, 120],
-        [136, 114],
+        [98, 112],
+        [106, 116],
+        [110, 110],
+        [130, 110],
+        [136, 116],
+        [144, 112],
       ]
-        .map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.15" fill="#a56b48" opacity="0.8"/>`)
+        .map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.3" fill="#a86a45"/>`)
         .join('')
     : '';
   const glasses = look.glasses
-    ? `<g fill="none" stroke="#2a211c" stroke-width="2">
-        <circle cx="104" cy="100" r="14"/>
-        <circle cx="136" cy="100" r="14"/>
-        <path d="M118 100 h4"/>
+    ? `<g fill="rgba(255,255,255,0.18)" stroke="#2a211c" stroke-width="1.7">
+        <circle cx="104" cy="98" r="12"/>
+        <circle cx="136" cy="98" r="12"/>
+        <path d="M116 98 h8" fill="none"/>
+        <path d="M92 96 h-6 M148 96 h6" fill="none" stroke-linecap="round"/>
       </g>`
     : '';
+  const eye = (cx: number) => `<g class="eye">
+      <ellipse cx="${cx}" cy="98" rx="9" ry="7.2" fill="#fff"/>
+      <circle cx="${cx + 0.6}" cy="99" r="3.8" fill="#2a211c"/>
+      <circle cx="${cx + 2.1}" cy="97.4" r="1.5" fill="#fff"/>
+    </g>`;
   return `<g class="face">
-    <ellipse cx="96" cy="114" rx="10" ry="6" fill="${blush}" opacity="0.45"/>
-    <ellipse cx="144" cy="114" rx="10" ry="6" fill="${blush}" opacity="0.45"/>
-    <path d="M120 104 Q123 112 118 114" fill="none" stroke="#2a211c" stroke-opacity="0.35" stroke-width="1.4" stroke-linecap="round"/>
-    <g class="eye">
-      <ellipse cx="104" cy="100" rx="8.5" ry="6.4" fill="#fff"/>
-      <circle cx="105" cy="101" r="3.4" fill="#2a211c"/>
-      <circle cx="106.6" cy="99.4" r="1.3" fill="#fff"/>
-      <path class="lid" d="M95 100 Q104 92 113 100 Q104 108 95 100 Z" fill="${look.skin}"/>
-    </g>
-    <g class="eye">
-      <ellipse cx="136" cy="100" rx="8.5" ry="6.4" fill="#fff"/>
-      <circle cx="137" cy="101" r="3.4" fill="#2a211c"/>
-      <circle cx="138.6" cy="99.4" r="1.3" fill="#fff"/>
-      <path class="lid" d="M127 100 Q136 92 145 100 Q136 108 127 100 Z" fill="${look.skin}"/>
-    </g>
-    <path d="M94 86 Q104 80 114 88" fill="none" stroke="${darken(look.hairColor, 0.1)}" stroke-width="2" stroke-linecap="round"/>
-    <path d="M126 88 Q136 80 146 86" fill="none" stroke="${darken(look.hairColor, 0.1)}" stroke-width="2" stroke-linecap="round"/>
+    <ellipse cx="94" cy="112" rx="12" ry="7" fill="${blush}" opacity="0.7"/>
+    <ellipse cx="146" cy="112" rx="12" ry="7" fill="${blush}" opacity="0.7"/>
+    <path d="M120 104 Q124 112 117 114" fill="none" stroke="#2a211c" stroke-opacity="0.4" stroke-width="1.5" stroke-linecap="round"/>
+    ${eye(103)}
+    ${eye(137)}
+    <path d="M92 84 Q103 78 114 86" fill="none" stroke="${darken(look.hairColor, 0.15)}" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M126 86 Q137 78 148 84" fill="none" stroke="${darken(look.hairColor, 0.15)}" stroke-width="2.2" stroke-linecap="round"/>
     ${smile}
     ${freckleDots}
     ${glasses}
@@ -143,8 +140,10 @@ function body(look: PersonLook): { legs: string; torso: string; arms: string } {
       <ellipse cx="104" cy="474" rx="14" ry="8" fill="${skin}"/>
       <ellipse cx="138" cy="474" rx="14" ry="8" fill="${skin}"/>
     </g>`;
-  const torso = `<path d="M80 176 C72 206 78 250 94 272 L146 272 C162 250 168 206 160 176 Q120 190 80 176 Z" fill="${skin}"/>
-    <path d="M106 146 h28 l-3 30 h-22 z" fill="${skin}"/>`;
+  const torso = `<g class="hip">
+      <path d="M108 132 C104 156 106 170 112 178 L128 178 C134 170 136 156 132 132 Z" fill="${skin}"/>
+      <path d="M80 176 C72 206 78 250 94 272 L146 272 C162 250 168 206 160 176 Q120 190 80 176 Z" fill="${skin}"/>
+    </g>`;
   const arms = `<g class="arm left" style="transform-origin:78px 180px">
       <path d="M86 170 C58 182 40 220 38 262 C36 276 50 280 56 268 C60 230 74 198 96 184 Z" fill="${skin}"/>
       <circle cx="46" cy="270" r="9" fill="${skin}"/>
@@ -156,11 +155,37 @@ function body(look: PersonLook): { legs: string; torso: string; arms: string } {
   return { legs, torso, arms };
 }
 
+function streetWear(look: PersonLook): string {
+  const top = look.streetTop ?? '#e23b6a';
+  const bottom = look.streetBottom ?? '#2a211c';
+  const edge = darken(top, 0.28);
+  if (look.streetKind === 'separates') {
+    return `<g class="street">
+      <path d="M82 172 C74 196 80 236 96 252 L144 252 C160 236 166 196 158 172 Q120 190 82 172 Z" fill="${top}" stroke="${edge}" stroke-width="2"/>
+      <path d="M100 176 Q120 196 140 176" fill="none" stroke="${lighten(top, 0.35)}" stroke-width="3" stroke-linecap="round"/>
+      <path d="M96 248 L78 392 Q96 404 108 392 L114 300 L120 392 Q132 406 148 392 L162 248 Z" fill="${bottom}"/>
+      <path d="M96 248 Q120 260 144 248" fill="none" stroke="${darken(bottom, 0.25)}" stroke-width="3"/>
+      <ellipse cx="100" cy="486" rx="18" ry="8" fill="${darken(bottom, 0.15)}"/>
+      <ellipse cx="142" cy="486" rx="18" ry="8" fill="${darken(bottom, 0.15)}"/>
+    </g>`;
+  }
+  return `<g class="street">
+    <path d="M78 168 C68 210 74 280 64 392 Q120 418 176 392 C166 280 172 210 162 168 Q120 192 78 168 Z" fill="${top}" stroke="${edge}" stroke-width="2.2"/>
+    <path d="M96 170 Q120 202 144 170" fill="${lighten(top, 0.22)}"/>
+    <path d="M92 250 Q120 262 148 250" fill="none" stroke="${edge}" stroke-width="2" opacity="0.7"/>
+    <path d="M86 300 Q100 340 92 388 M154 300 Q140 340 148 388" fill="none" stroke="${edge}" stroke-width="1.6" opacity="0.35" stroke-linecap="round"/>
+    <ellipse cx="100" cy="486" rx="18" ry="8" fill="${bottom}"/>
+    <ellipse cx="142" cy="486" rx="18" ry="8" fill="${bottom}"/>
+    <path d="M86 482 Q100 474 112 482 M130 482 Q142 474 156 482" fill="none" stroke="${lighten(bottom, 0.35)}" stroke-width="1.5"/>
+  </g>`;
+}
+
 export function renderPerson(opts: {
   look: PersonLook;
   outfit?: Outfit | null;
   pose?: Pose;
   uid: string;
+  embed?: boolean;
 }): string {
   const pose = opts.pose ?? 'idle';
   const { legs, torso, arms } = body(opts.look);
@@ -179,15 +204,7 @@ export function renderPerson(opts: {
     shade = g.shade;
     extras = g.extras;
   }
-  const street = opts.outfit
-    ? ''
-    : `<g class="street">
-        <path d="M84 174 C74 198 80 236 96 252 L144 252 C160 236 166 198 156 174 Q120 188 84 174 Z" fill="#f7f1ea" stroke="#e6d9cc" stroke-width="1.4"/>
-        <path d="M98 248 C86 300 78 340 74 378 L108 382 L116 320 L124 382 L166 378 C162 340 154 300 142 248 Z" fill="#e7d5c8"/>
-        <path d="M98 248 Q120 258 142 248" fill="none" stroke="#d8c2b4" stroke-width="2"/>
-        <ellipse cx="102" cy="486" rx="16" ry="7" fill="#cbb5a2"/>
-        <ellipse cx="140" cy="486" rx="16" ry="7" fill="#cbb5a2"/>
-      </g>`;
+  const street = opts.outfit ? '' : streetWear(opts.look);
   const beret = opts.look.beret
     ? `<g transform="translate(126 62) rotate(-12)">
         <ellipse cx="0" cy="8" rx="28" ry="8" fill="#1a120e"/>
@@ -195,23 +212,28 @@ export function renderPerson(opts: {
         <circle cx="8" cy="-6" r="3" fill="#e2b15a"/>
       </g>`
     : '';
-  return `<svg class="person pose-${pose}" viewBox="${PERSON_VB}" width="300" height="540">
-    <defs>${defs}</defs>
-    <ellipse cx="120" cy="512" rx="50" ry="10" fill="#000" opacity="0.08"/>
+  const inner = `
+    <ellipse cx="120" cy="512" rx="50" ry="10" fill="#000" opacity="0.12"/>
     ${hairBack(opts.look)}
     ${legs}
     <g class="garment-back">${back}</g>
     ${torso}
-    <g class="garment-main">${main}${street}</g>
+    <g class="garment-main">${street}${main}</g>
     ${arms}
     <g class="garment-sleeves">${sleeves}</g>
     <g class="garment-shade">${shade}</g>
-    <circle cx="120" cy="98" r="40" fill="${opts.look.skin}"/>
-    <ellipse cx="80" cy="104" rx="7" ry="10" fill="${opts.look.skin}"/>
-    <ellipse cx="160" cy="104" rx="7" ry="10" fill="${opts.look.skin}"/>
+    <circle cx="120" cy="96" r="42" fill="${opts.look.skin}"/>
+    <ellipse cx="78" cy="102" rx="8" ry="11" fill="${opts.look.skin}"/>
+    <ellipse cx="162" cy="102" rx="8" ry="11" fill="${opts.look.skin}"/>
     ${face(opts.look, pose)}
     ${hairFront(opts.look)}
     ${beret}
-    <g class="garment-extras">${extras}</g>
+    <g class="garment-extras">${extras}</g>`;
+  if (opts.embed) {
+    return `<g class="person pose-${pose}">${defs ? `<defs>${defs}</defs>` : ''}${inner}</g>`;
+  }
+  return `<svg class="person pose-${pose}" viewBox="${PERSON_VB}" width="300" height="540">
+    <defs>${defs}</defs>
+    ${inner}
   </svg>`;
 }

@@ -54,22 +54,22 @@ const FORM: Record<SketchId, Measure> = {
     hemRound: 14,
   }),
   'rain-coat': m({
-    neckY: 154,
-    neckHW: 26,
-    neckDrop: 10,
-    shoulderY: 176,
-    shoulderHW: 86,
-    underY: 210,
-    underHW: 70,
-    bustY: 236,
-    bustHW: 84,
-    waistY: 300,
-    waistHW: 70,
+    neckY: 148,
+    neckHW: 22,
+    neckDrop: 8,
+    shoulderY: 170,
+    shoulderHW: 98,
+    underY: 206,
+    underHW: 78,
+    bustY: 228,
+    bustHW: 90,
+    waistY: 292,
+    waistHW: 86,
     hipY: 360,
     hipHW: 96,
-    hemY: 530,
-    hemHW: 132,
-    hemRound: 6,
+    hemY: 548,
+    hemHW: 104,
+    hemRound: 2,
   }),
   'twirl-set': m({
     neckY: 152,
@@ -551,23 +551,22 @@ function fabricPaint(uid: string, pattern: FabricId, color: string): { defs: str
     return { defs: `<pattern id="${id}" width="14" height="14" patternUnits="userSpaceOnUse">${body}</pattern>`, fill: `url(#${id})`, klass: 'denim-cloth' };
   }
   if (pattern === 'sequins') {
-    const ground = darken(color, 0.18);
-    const disc = lighten(color, 0.12);
-    const shine = lighten(color, 0.55);
-    body = `<rect width="22" height="22" fill="${ground}"/>
-      <circle cx="6" cy="6" r="5.2" fill="${disc}"/>
-      <circle cx="17" cy="15" r="5.2" fill="${disc}"/>
-      <circle cx="6" cy="6" r="5.2" fill="url(#${uid}-seq)"/>
-      <circle cx="17" cy="15" r="5.2" fill="url(#${uid}-seq)"/>
-      <circle cx="4.4" cy="4.4" r="1.3" fill="${shine}" opacity="0.9"/>
-      <circle cx="15.4" cy="13.4" r="1.3" fill="${shine}" opacity="0.9"/>`;
+    const ground = darken(color, 0.42);
+    const disc = lighten(color, 0.2);
+    const shine = '#fff8e8';
+    body = `<rect width="18" height="18" fill="${ground}"/>
+      <circle cx="5" cy="5" r="4.4" fill="url(#${uid}-seq)"/>
+      <circle cx="14" cy="13" r="4.4" fill="url(#${uid}-seq)"/>
+      <circle cx="3.6" cy="3.6" r="1.5" fill="${shine}"/>
+      <circle cx="12.6" cy="11.6" r="1.5" fill="${shine}"/>
+      <circle cx="6.2" cy="6.4" r="0.7" fill="${disc}" opacity="0.7"/>`;
     const grad = `<radialGradient id="${uid}-seq" cx="35%" cy="35%" r="70%">
       <stop offset="0" stop-color="${shine}"/>
       <stop offset="0.45" stop-color="${disc}"/>
       <stop offset="1" stop-color="${darken(color, 0.35)}"/>
     </radialGradient>`;
     return {
-      defs: `${grad}<pattern id="${id}" width="22" height="22" patternUnits="userSpaceOnUse">${body}</pattern>`,
+      defs: `${grad}<pattern id="${id}" width="18" height="18" patternUnits="userSpaceOnUse">${body}</pattern>`,
       fill: `url(#${id})`,
       klass: 'sequin-cloth',
     };
@@ -633,27 +632,51 @@ function seamLines(measure: Measure, sketch: SketchId, gold: boolean): string {
   return `<path d="${d}" fill="none" stroke="${stroke}" stroke-opacity="${opacity}" stroke-width="${width}" stroke-linecap="round" stroke-dasharray="${gold ? '0' : '1.5 2.4'}"/>`;
 }
 
-function lapels(measure: Measure): string {
-  const right = `M ${measure.cx - 2} ${measure.neckY + measure.neckDrop}
-    L ${measure.cx + measure.neckHW + 2} ${measure.neckY - 2}
-    L ${measure.cx + measure.shoulderHW * 0.45} ${measure.shoulderY + 6}
-    L ${measure.cx + 26} ${measure.bustY + 6}
-    L ${measure.cx + 6} ${measure.bustY - 8} Z`;
-  const left = `M ${measure.cx + 2} ${measure.neckY + measure.neckDrop}
-    L ${measure.cx - measure.neckHW - 2} ${measure.neckY - 2}
-    L ${measure.cx - measure.shoulderHW * 0.45} ${measure.shoulderY + 6}
-    L ${measure.cx - 26} ${measure.bustY + 6}
-    L ${measure.cx - 6} ${measure.bustY - 8} Z`;
-  return `<path d="${right}" fill="#000" opacity="0.16"/><path d="${left}" fill="#000" opacity="0.16"/>
-    <path d="${right}" fill="none" stroke="#1a120e" stroke-opacity="0.35" stroke-width="1.2"/>
-    <path d="${left}" fill="none" stroke="#1a120e" stroke-opacity="0.35" stroke-width="1.2"/>`;
-}
-
-function pockets(measure: Measure): string {
-  const y = measure.hipY - 10;
-  const pocket = (x: number) =>
-    `<path d="M ${x} ${y} h 34 v 26 q 0 7 -8 7 h -18 q -8 0 -8 -7 v -26 z" fill="#000" opacity="0.08" stroke="#1a120e" stroke-opacity="0.35" stroke-width="1.2"/>`;
-  return pocket(measure.cx - measure.hipHW + 8) + pocket(measure.cx + 10);
+function coatFront(measure: Measure, color: string, cropped: boolean): string {
+  const lapel = darken(color, 0.32);
+  const collar = darken(color, 0.18);
+  const yStop = cropped ? measure.waistY - 4 : measure.bustY + 36;
+  const right = `M ${measure.cx + 2} ${measure.neckY + 4}
+    L ${measure.cx + 18} ${measure.neckY - 8}
+    L ${measure.cx + measure.shoulderHW * 0.62} ${measure.shoulderY + 10}
+    L ${measure.cx + 42} ${yStop}
+    L ${measure.cx + 10} ${yStop - 16}
+    Z`;
+  const left = `M ${measure.cx - 2} ${measure.neckY + 4}
+    L ${measure.cx - 18} ${measure.neckY - 8}
+    L ${measure.cx - measure.shoulderHW * 0.62} ${measure.shoulderY + 10}
+    L ${measure.cx - 42} ${yStop}
+    L ${measure.cx - 10} ${yStop - 16}
+    Z`;
+  const collarBand = `M ${measure.cx - 28} ${measure.neckY + 2}
+    Q ${measure.cx} ${measure.neckY + 22} ${measure.cx + 28} ${measure.neckY + 2}
+    L ${measure.cx + 22} ${measure.neckY + 16}
+    Q ${measure.cx} ${measure.neckY + 30} ${measure.cx - 22} ${measure.neckY + 16} Z`;
+  let pockets = '';
+  if (!cropped) {
+    const py = measure.hipY - 6;
+    const flap = (x: number) => `<path d="M ${x} ${py} h 42 v 8 q -4 6 -10 6 h -22 q -6 0 -10 -6 z" fill="${darken(color, 0.22)}" stroke="${darken(color, 0.4)}" stroke-width="1"/>
+      <path d="M ${x + 4} ${py + 14} h 34 v 28 q 0 6 -6 6 h -22 q -6 0 -6 -6 v -28 z" fill="${darken(color, 0.12)}" opacity="0.9"/>`;
+    pockets = flap(measure.cx - measure.hipHW * 0.72) + flap(measure.cx + 8);
+  }
+  const cuffY = measure.shoulderY + (cropped ? 108 : 132);
+  const cuffs = [-1, 1]
+    .map((dir) => {
+      const x = measure.cx + dir * (measure.shoulderHW + 18);
+      return `<rect x="${x - 12}" y="${cuffY}" width="24" height="12" rx="3" fill="${collar}" stroke="${darken(color, 0.35)}" stroke-width="1"/>`;
+    })
+    .join('');
+  const beltY = measure.waistY;
+  const tie = `<path d="M ${measure.cx - measure.waistHW + 4} ${beltY - 6}
+      Q ${measure.cx} ${beltY + 4} ${measure.cx + measure.waistHW - 4} ${beltY - 6}
+      L ${measure.cx + measure.waistHW - 8} ${beltY + 8}
+      Q ${measure.cx} ${beltY + 16} ${measure.cx - measure.waistHW + 8} ${beltY + 8} Z" fill="${darken(color, 0.22)}"/>
+    <rect x="${measure.cx - 7}" y="${beltY - 6}" width="14" height="14" rx="2" fill="#f2c14e" stroke="#8a5a12" stroke-width="1"/>`;
+  return `<path d="${collarBand}" fill="${collar}" stroke="${darken(color, 0.4)}" stroke-width="1"/>
+    <path d="${right}" fill="${lapel}" stroke="${darken(color, 0.45)}" stroke-width="1.2"/>
+    <path d="${left}" fill="${lapel}" stroke="${darken(color, 0.45)}" stroke-width="1.2"/>
+    <path d="M ${measure.cx} ${measure.neckY + 18} L ${measure.cx - 3} ${cropped ? measure.waistY + 10 : measure.hemY - 16}" fill="none" stroke="${darken(color, 0.45)}" stroke-width="2"/>
+    ${pockets}${cuffs}${cropped ? '' : tie}${buttons(measure, color, cropped ? 3 : 5, cropped ? measure.waistY : measure.hipY + 24)}`;
 }
 
 function pleatOverlay(measure: Measure, color: string): string {
@@ -771,8 +794,11 @@ function sequinDust(measure: Measure, color: string, uid: string): string {
 function details(sketch: SketchId, measure: Measure, color: string, uid: string): string {
   let extra = '';
   if (sketch === 'rain-coat' || sketch === 'crop-jacket') {
-    extra += lapels(measure);
-    if (sketch === 'rain-coat') extra += pockets(measure);
+    extra += coatFront(measure, color, sketch === 'crop-jacket');
+  }
+  if (sketch === 'twirl-set' || sketch === 'pleat-parade') {
+    const y = measure.waistY;
+    extra += `<path d="M ${measure.cx - measure.waistHW - 4} ${y - 8} Q ${measure.cx} ${y + 2} ${measure.cx + measure.waistHW + 4} ${y - 8} L ${measure.cx + measure.waistHW} ${y + 8} Q ${measure.cx} ${y + 16} ${measure.cx - measure.waistHW} ${y + 8} Z" fill="${darken(color, 0.22)}"/>`;
   }
   if (sketch === 'pleat-parade') {
     const skirt = circleSkirt({ ...measure, hemRound: 4, hemHW: measure.hemHW * 0.96 });
@@ -803,9 +829,8 @@ function accessoriesSvg(
       const x = measure.cx;
       const y = atNeck ? measure.neckY + 18 : measure.waistY;
       s += bow(x, y, mix(color, '#ffffff', 0.15), bowScale);
-    } else if (id === 'buttons') {
-      const end = sketch === 'crop-jacket' ? measure.waistY + 10 : sketch === 'rain-coat' ? measure.hipY + 20 : measure.waistY;
-      s += buttons(measure, color, sketch === 'rain-coat' ? 5 : 4, end);
+    } else if (id === 'buttons' && sketch !== 'rain-coat' && sketch !== 'crop-jacket') {
+      s += buttons(measure, color, 4, measure.waistY);
     } else if (id === 'belt') {
       s += belt(measure, color);
     } else if (id === 'sequins') {

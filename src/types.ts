@@ -59,6 +59,10 @@ export interface PersonLook {
   freckles?: boolean;
   beret?: boolean;
   blush?: string;
+  /** Everyday clothes the customer walks in wearing. */
+  streetTop?: string;
+  streetBottom?: string;
+  streetKind?: 'dress' | 'separates';
 }
 
 export interface Customer extends PersonLook {

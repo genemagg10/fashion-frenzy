@@ -530,7 +530,7 @@ function shopScene(): string {
   const customer = session.customer ?? CUSTOMERS[0];
   const art = shopSvg({
     decor: save.decor,
-    customer: renderPerson({ look: customer, pose: 'idle', uid: nextId('shop') }),
+    customer: renderPerson({ look: customer, pose: 'idle', uid: nextId('shop'), embed: true }),
     cat: session.cat,
     disco: session.disco,
     posterOn: save.tutorialDone && save.customersServed >= 2,
@@ -1403,18 +1403,28 @@ function runwayScene(): string {
         <p class="runway-theme">${esc(theme.name)}</p>
         <button class="btn secondary tiny" type="button" data-act="runway-next">Next</button>
       </header>
-      <div class="crowd crowd-left">${crowd()}</div>
-      <div class="crowd crowd-right">${crowd()}</div>
-      <div class="catwalk"></div>
+      <div class="crowd crowd-left">${crowd(0)}</div>
+      <div class="crowd crowd-right">${crowd(3)}</div>
+      <div class="photog left"></div>
+      <div class="photog right"></div>
+      <div class="catwalk"><div class="lane"></div></div>
       <div class="spot"></div>
       <div class="model-slot"></div>
+      <div class="ella-banner"><b>Ella</b><span>her look</span></div>
       <div class="namecard"><b>Tonight</b><span>${esc(theme.name)}</span></div>
+      <div class="confetti ella-confetti" aria-hidden="true"></div>
       <div class="flash"></div>
     </section>`;
 }
 
-function crowd(): string {
-  return Array.from({ length: 8 }, (_, index) => `<i style="--i:${index}"></i>`).join('');
+function crowd(shift: number): string {
+  const shirts = ['#e56b93', '#2f6f86', '#f2c14e', '#7a4e8a', '#e07a3d', '#3e8f62', '#24315c'];
+  const hairs = ['#241910', '#c4922a', '#6b2d12', '#1a120e', '#4a3428'];
+  const skins = ['#f6d3ba', '#e7b48a', '#8d5524', '#c68642', '#5c3a2a'];
+  return Array.from({ length: 6 }, (_, index) => {
+    const i = index + shift;
+    return `<span class="fan" style="--i:${index};--shirt:${shirts[i % shirts.length]};--hair:${hairs[i % hairs.length]};--skin:${skins[i % skins.length]}"></span>`;
+  }).join('');
 }
 
 function mountRunway(): () => void {
@@ -1461,20 +1471,33 @@ async function playShow(): Promise<void> {
   await pause(reduce ? 400 : 1000);
   for (const entry of lineup) {
     if (runway.cancelled || session.scene !== 'runway') return;
-    setCard(entry.label, entry.sub);
+    const ella = entry.label === 'Ella';
+    setCard(ella ? 'Ella' : entry.label, entry.sub);
+    document.querySelector('.runway')?.classList.toggle('ella-show', ella);
+    const banner = document.querySelector('.ella-banner span');
+    if (banner) banner.textContent = entry.sub;
+    if (ella) {
+      const burst = document.querySelector('.ella-confetti');
+      if (burst) burst.innerHTML = confetti().replace(/^<div[^>]*>/, '').replace(/<\/div>$/, '');
+    }
     const slot = document.querySelector('.model-slot') as HTMLElement | null;
     if (!slot) return;
     const pose: Pose = 'stride';
     slot.innerHTML = renderPerson({ look: entry.look, outfit: entry.outfit, pose, uid: nextId('run') });
     slot.classList.toggle('finale', entry.finale);
-    await walk(slot, reduce ? 700 : entry.finale ? 3200 : 2500);
+    slot.classList.remove('posing');
+    await walk(slot, reduce ? 700 : ella ? 3000 : 2400);
     if (runway.cancelled || session.scene !== 'runway') return;
-    slot.querySelector('.person')?.classList.replace('pose-stride', 'pose-cheer');
+    const person = slot.querySelector('.person');
+    person?.classList.remove('pose-stride');
+    person?.classList.add(ella ? 'pose-finale' : 'pose-cheer');
+    slot.classList.add('posing');
     document.querySelector('.runway')?.classList.add('cheering');
     popFlash();
     audio.cheer();
-    if (entry.finale) window.setTimeout(popFlash, 280);
-    await pause(reduce ? 500 : entry.finale ? 1400 : 1100);
+    window.setTimeout(popFlash, 260);
+    if (ella) window.setTimeout(popFlash, 520);
+    await pause(reduce ? 500 : ella ? 1600 : 1100);
     document.querySelector('.runway')?.classList.remove('cheering');
   }
   if (runway.cancelled || session.scene !== 'runway') return;
@@ -1516,11 +1539,11 @@ function walk(slot: HTMLElement, duration: number): Promise<void> {
     const frame = (now: number) => {
       if (runway.cancelled) return finish();
       const u = Math.min(1, (now - start) / duration);
-      const bottom = 70 - u * 62;
-      const scale = 0.4 + u * 0.82;
-      const bob = Math.sin(u * Math.PI * 8) * 5;
+      const bottom = 62 - u * 48;
+      const scale = 0.64 + u * 0.46;
+      const sway = Math.sin(u * Math.PI * 7) * 10;
       slot.style.bottom = `${bottom}%`;
-      slot.style.transform = `translateX(-50%) translateY(${bob}px) scale(${scale})`;
+      slot.style.transform = `translateX(calc(-50% + ${sway}px)) scale(${scale})`;
       if (u < 1) runway.raf = requestAnimationFrame(frame);
       else finish();
     };
