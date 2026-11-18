@@ -71,6 +71,7 @@ button { cursor: pointer; }
   font-size: 1.05rem;
   line-height: 1.05;
   padding: 6px 0;
+  min-height: 44px;
   text-align: left;
 }
 .hud-stats { display: flex; gap: 8px; margin-left: auto; }
@@ -134,7 +135,7 @@ button { cursor: pointer; }
 }
 .btn.tiny {
   width: auto;
-  min-height: 40px;
+  min-height: 44px;
   margin: 0;
   padding: 8px 14px;
   font-size: 0.95rem;
@@ -172,17 +173,60 @@ button { cursor: pointer; }
 .person { overflow: visible; }
 .panel {
   background: var(--paper);
-  padding: 8px 16px calc(14px + env(safe-area-inset-bottom));
+  padding: 8px 16px calc(10px + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   gap: 6px;
-  overflow: auto;
-  flex-shrink: 0;
-  max-height: 58%;
+  overflow: hidden;
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: 52%;
 }
-.studio-sew .panel { max-height: 36%; }
-.studio-finish .panel { max-height: 46%; }
-.panel > .btn:not(.ghost) { position: sticky; bottom: 0; z-index: 2; }
+.studio .panel {
+  max-height: 48%;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  align-content: stretch;
+}
+.panel-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.panel-dock {
+  flex: 0 0 auto;
+  background: var(--paper);
+  padding-top: 6px;
+  position: relative;
+  z-index: 3;
+}
+.panel-dock .btn { margin-top: 4px; }
+.form-art { overflow: visible; }
+.touch-pad {
+  position: absolute;
+  width: 56px;
+  height: 56px;
+  margin: 0;
+  padding: 0;
+  border-radius: 50%;
+  border: 3px solid #c23b5a;
+  background: #fff7ea;
+  box-shadow: 0 0 0 8px rgba(229, 107, 147, 0.45);
+  z-index: 6;
+  touch-action: manipulation;
+  animation: pad-pulse 1.15s ease-in-out infinite;
+}
+.touch-pad.done {
+  animation: none;
+  background: #e2b15a;
+  border-color: #8a6a22;
+  box-shadow: none;
+  pointer-events: none;
+}
+button, .dot, .pat, .icon-btn { touch-action: manipulation; }
 .panel.slim { padding-top: 4px; }
 .eyebrow, .kicker {
   margin: 0;
@@ -277,14 +321,17 @@ h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); line-height: 1.05; }
 .dots i { width: 8px; height: 8px; border-radius: 50%; background: #e4d5c8; display: block; }
 .dots i.on { background: var(--rose); transform: scale(1.3); }
 
-.colors { display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; }
+.colors { display: flex; flex-wrap: wrap; gap: 8px; }
 .dot {
-  aspect-ratio: 1;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   border: 2px solid white;
   box-shadow: 0 0 0 1px var(--line);
-  min-height: 34px;
+  min-width: 44px;
+  min-height: 44px;
   padding: 0;
+  flex: none;
 }
 .dot.on { box-shadow: 0 0 0 3px var(--ink); }
 .color-name { margin: 0; font-weight: 800; }
@@ -680,13 +727,15 @@ h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); line-height: 1.05; }
 .pose-twirl .flare { animation: flare 1.15s ease-in-out; transform-box: fill-box; transform-origin: top center; }
 .lid { transform-box: fill-box; transform-origin: center; animation: blink 5.2s infinite; }
 .cat { transform-box: fill-box; transform-origin: center; animation: breathe 3s ease-in-out infinite; cursor: pointer; }
-.step-pin .pin-ring { transform-box: fill-box; transform-origin: center; animation: pulse 1s ease-in-out infinite; }
+.step-pin .pin-ring,
+.step-snip .snip-ring { transform-box: fill-box; transform-origin: center; animation: pulse 1s ease-in-out infinite; }
 .pin-spot.pinned .pin-head { fill: #e2b15a; }
 .pin-spot.pinned .pin-ring { display: none; }
 .step-pin .stitch-guide, .step-pin .stitch-done, .step-pin .snip-spot,
 .step-stitch .snip-spot { opacity: 0; pointer-events: none; }
-.step-stitch .pin-hit, .step-snip .pin-hit { pointer-events: none; }
-.step-snip .pin-spot { opacity: 0.35; }
+.step-stitch .pin-spot .pin-hit,
+.step-snip .pin-spot .pin-hit { pointer-events: none; }
+.step-snip .pin-spot { opacity: 0; pointer-events: none; }
 .snip-spot.snipped { opacity: 0.2; }
 .dress-svg.step-pin, .dress-svg.step-stitch, .dress-svg.step-snip { touch-action: none; }
 .fabric-rainbow { animation: hue 8s linear infinite; }
@@ -708,6 +757,10 @@ h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); line-height: 1.05; }
 @keyframes blink { 0%, 88%, 100% { transform: scaleY(0.05); } 93%, 96% { transform: scaleY(1); } }
 @keyframes breathe { 50% { transform: scale(1.04, 0.98); } }
 @keyframes pulse { 50% { transform: scale(1.35); opacity: 0.4; } }
+@keyframes pad-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 6px rgba(229, 107, 147, 0.45); }
+  50% { transform: scale(1.08); box-shadow: 0 0 0 16px rgba(229, 107, 147, 0.08); }
+}
 @keyframes pop { from { transform: scale(0.6); } to { transform: scale(1); } }
 @keyframes bump { 40% { transform: scale(1.18); } }
 @keyframes rise { to { transform: translateY(-160px); opacity: 0; } }
@@ -744,12 +797,14 @@ h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); line-height: 1.05; }
     border: 1px solid rgba(255, 255, 255, 0.75);
   }
   .split, .detail, .reaction { flex-direction: row; align-items: stretch; }
-  .panel, .studio-sew .panel, .studio-finish .panel {
-    width: min(430px, 40%);
-    max-height: none;
-    height: auto;
-    justify-content: center;
+  .panel, .studio .panel, .studio-sew .panel, .studio-finish .panel {
+    width: min(420px, 40%);
+    max-height: 100%;
+    height: 100%;
+    flex: 0 0 min(420px, 40%);
+    justify-content: flex-start;
   }
+  .studio .panel { display: grid; grid-template-rows: minmax(0, 1fr) auto; }
   .reaction .panel { width: min(460px, 42%); }
   .title-screen { flex-direction: row; align-items: center; max-width: 1100px; margin: 0 auto; min-height: 100dvh; }
   .title-art { height: 88dvh; }
@@ -758,6 +813,13 @@ h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); line-height: 1.05; }
 }
 @media (max-width: 979px) {
   .cover-frame { transform: scale(0.32); transform-origin: top left; }
+}
+@media (max-height: 760px) {
+  .studio .panel { padding: 6px 12px calc(8px + env(safe-area-inset-bottom)); }
+  .studio .panel h1 { font-size: 1.4rem; }
+  .pip { padding: 6px 8px; }
+  .pip p, .step-label { font-size: 0.95rem; }
+  .studio .btn { min-height: 48px; padding: 8px 14px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

@@ -113,6 +113,7 @@ let seq = 1;
 let lastCustomerId = '';
 let toastTimer = 0;
 const runway: RunHandle = { cancelled: false, raf: 0, skip: null };
+let sewApi: { pin: (index: number) => void; snip: (index: number) => void } | null = null;
 
 const MODELS: PersonLook[] = [
   { skin: '#F6D3BA', hair: 'bob', hairColor: '#3a2a22' },
@@ -143,7 +144,25 @@ export function boot(): void {
   audio.setMuted(save.muted);
   const app = document.getElementById('app');
   if (!app) return;
-  app.addEventListener('click', onClick);
+  let origin: { x: number; y: number } | null = null;
+  let suppressClickUntil = 0;
+  app.addEventListener('pointerdown', (event) => {
+    if (event.pointerType === 'mouse') return;
+    origin = { x: event.clientX, y: event.clientY };
+  });
+  app.addEventListener('pointerup', (event) => {
+    if (event.pointerType === 'mouse') return;
+    const start = origin;
+    origin = null;
+    if (!start) return;
+    if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > 16) return;
+    suppressClickUntil = performance.now() + 700;
+    onClick(event);
+  });
+  app.addEventListener('click', (event) => {
+    if (performance.now() < suppressClickUntil) return;
+    onClick(event);
+  });
   if (location.hash === '#gallery') session.scene = 'gallery';
   else if (location.hash === '#cover') session.scene = 'cover';
   draw();
@@ -273,7 +292,13 @@ function onClick(event: MouseEvent): void {
   audio.unlock();
   if (!target) return;
   const act = target.getAttribute('data-act');
-  if (!act || act === 'pin' || act === 'snip' || act === 'book') return;
+  if (!act || act === 'book') return;
+  if (act === 'pin' || act === 'snip') {
+    const index = Number(target.getAttribute('data-id') ?? target.getAttribute('data-i'));
+    if (act === 'pin') sewApi?.pin(index);
+    else sewApi?.snip(index);
+    return;
+  }
   if (act !== 'mute' && act !== 'sketch-prev' && act !== 'sketch-next' && act !== 'cat' && act !== 'chandelier') audio.tap();
   const id = target.getAttribute('data-id') ?? '';
   switch (act) {
@@ -711,26 +736,34 @@ function studioScene(): string {
     color: draft.color,
     accessories: session.phase === 'finish' ? draft.accessories : [],
   };
+  const dock =
+    session.phase === 'fabric'
+      ? `<button class="btn" type="button" data-act="to-sew">Sew it</button>`
+      : session.phase === 'sew'
+        ? `<p class="step-label">Tap each pink pin.</p><button class="btn" type="button" data-act="help-sew">Pip, help me sew</button>`
+        : `<button class="btn" type="button" data-act="finish">${esc(session.mode === 'show' ? (session.show && session.show.looks.length === 2 ? 'To the runway' : 'Save this look') : `Show ${session.customer?.name ?? 'them'}`)}</button>`;
   return `${hud()}
     <div class="split studio studio-${session.phase}">
       <div class="art form-art">${renderDressForm(preview, nextId('form'), formMode)}</div>
       <section class="panel">
-        <div class="sketch-top">
-          <button class="icon-btn" type="button" data-act="back" aria-label="Back">${icon('back')}</button>
-          <div>
-            <p class="eyebrow">${esc(heading)}</p>
-            <h1>${session.phase === 'fabric' ? 'Choose cloth' : session.phase === 'sew' ? 'Sew' : 'Finishing'}</h1>
+        <div class="panel-scroll">
+          <div class="sketch-top">
+            <button class="icon-btn" type="button" data-act="back" aria-label="Back">${icon('back')}</button>
+            <div>
+              <p class="eyebrow">${esc(heading)}</p>
+              <h1>${session.phase === 'fabric' ? 'Choose cloth' : session.phase === 'sew' ? 'Sew' : 'Finishing'}</h1>
+            </div>
           </div>
+          <ol class="steps">
+            <li class="${session.phase === 'fabric' ? 'on' : 'done'}">Cloth</li>
+            <li class="${session.phase === 'sew' ? 'on' : session.phase === 'finish' ? 'done' : ''}">Sew</li>
+            <li class="${session.phase === 'finish' ? 'on' : ''}">Trim</li>
+          </ol>
+          ${session.phase === 'fabric' ? fabricControls(draft) : ''}
+          ${session.phase === 'finish' ? finishControls(draft) : ''}
+          ${pip(pipLine())}
         </div>
-        <ol class="steps">
-          <li class="${session.phase === 'fabric' ? 'on' : 'done'}">Cloth</li>
-          <li class="${session.phase === 'sew' ? 'on' : session.phase === 'finish' ? 'done' : ''}">Sew</li>
-          <li class="${session.phase === 'finish' ? 'on' : ''}">Trim</li>
-        </ol>
-        ${session.phase === 'fabric' ? fabricControls(draft) : ''}
-        ${session.phase === 'sew' ? sewControls() : ''}
-        ${session.phase === 'finish' ? finishControls(draft) : ''}
-        ${pip(pipLine())}
+        <div class="panel-dock">${dock}</div>
       </section>
     </div>`;
 }
@@ -744,24 +777,16 @@ function fabricControls(draft: Draft): string {
           <i class="pat-${fabric.id}"></i><span>${esc(fabric.name)}</span>
         </button>`)
       .join('')}</div>
-    <button class="btn" type="button" data-act="to-sew">Sew it</button>
     <button class="btn ghost" type="button" data-act="shelf">More cloth is on the shelf</button>`;
-}
-
-function sewControls(): string {
-  return `<p class="step-label">Tap each pink pin.</p>
-    <button class="btn ghost" type="button" data-act="help-sew">Pip, help me sew</button>`;
 }
 
 function finishControls(draft: Draft): string {
   const owned = ACCESSORIES.filter((item) => save.accessories.includes(item.id));
-  const label = session.mode === 'show' ? (session.show && session.show.looks.length === 2 ? 'To the runway' : 'Save this look') : `Show ${session.customer?.name ?? 'them'}`;
   return `<div class="patterns trims">${owned
     .map((item) => `<button type="button" class="pat ${draft.accessories.includes(item.id) ? 'on' : ''}" data-act="accessory" data-id="${item.id}">
         <i class="trim-icon">${icon(trimIcon(item.id))}</i><span>${esc(item.name)}</span>
       </button>`)
-    .join('')}</div>
-    <button class="btn" type="button" data-act="finish">${esc(label)}</button>`;
+    .join('')}</div>`;
 }
 
 function trimIcon(id: AccessoryId): string {
@@ -825,6 +850,67 @@ function mountSew(): () => void {
   let lastSound = 0;
   let stitchLocked = false;
   svg.classList.add('step-pin');
+  const host = svg.parentElement;
+  const pads: HTMLButtonElement[] = [];
+  const PAD = 56;
+  const placePads = (kind: 'pin' | 'snip', points: { x: number; y: number }[]) => {
+    pads.forEach((pad) => pad.remove());
+    pads.length = 0;
+    if (!host || points.length === 0) return;
+    const matrix = svg.getScreenCTM();
+    if (!matrix) return;
+    const bounds = host.getBoundingClientRect();
+    const spots: { x: number; y: number }[] = [];
+    points.forEach((point) => {
+      const local = svg.createSVGPoint();
+      local.x = point.x;
+      local.y = point.y;
+      const screen = local.matrixTransform(matrix);
+      let x = screen.x - bounds.left;
+      let y = screen.y - bounds.top;
+      for (const other of spots) {
+        const dx = x - other.x;
+        const dy = y - other.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < PAD + 8) {
+          const push = (PAD + 8 - dist) / 2 + 1;
+          const ux = dist < 1 ? 1 : dx / dist;
+          const uy = dist < 1 ? 0 : dy / dist;
+          x += ux * push;
+          other.x -= ux * push;
+          other.y -= uy * push;
+          y += uy * push;
+        }
+      }
+      spots.push({ x, y });
+    });
+    spots.forEach((spot) => {
+      spot.x = Math.min(bounds.width - PAD / 2 - 4, Math.max(PAD / 2 + 4, spot.x));
+      spot.y = Math.min(bounds.height - PAD / 2 - 4, Math.max(PAD / 2 + 4, spot.y));
+    });
+    spots.forEach((spot, index) => {
+      const pad = document.createElement('button');
+      pad.type = 'button';
+      pad.className = 'touch-pad';
+      pad.dataset.act = kind;
+      pad.dataset.id = String(index);
+      pad.setAttribute('aria-label', kind === 'pin' ? `Pin ${index + 1}` : `Loose thread ${index + 1}`);
+      pad.style.width = `${PAD}px`;
+      pad.style.height = `${PAD}px`;
+      pad.style.left = `${spot.x - PAD / 2}px`;
+      pad.style.top = `${spot.y - PAD / 2}px`;
+      const doneAlready = kind === 'pin' ? pins.has(index) : snips.has(index);
+      if (doneAlready) pad.classList.add('done');
+      pad.addEventListener('pointerdown', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (kind === 'pin') placePin(index);
+        else placeSnip(index);
+      });
+      host.appendChild(pad);
+      pads.push(pad);
+    });
+  };
   const donePath = svg.querySelector('.stitch-done');
   const loose = svg.querySelector('.loose-thread');
   const label = document.querySelector('.step-label');
@@ -853,7 +939,7 @@ function mountSew(): () => void {
     let hit = false;
     samples.forEach((sample, index) => {
       if (done[index]) return;
-      if (Math.hypot(sample.x - point.x, sample.y - point.y) <= 48) {
+      if (Math.hypot(sample.x - point.x, sample.y - point.y) <= 78) {
         done[index] = true;
         hit = true;
       }
@@ -868,7 +954,7 @@ function mountSew(): () => void {
       lastSound = now;
       audio.sew();
     }
-    if (!stitchLocked && coverage() >= 0.6) finishStitch();
+    if (!stitchLocked && coverage() >= 0.55) finishStitch();
   };
 
   const finishStitch = () => {
@@ -883,26 +969,30 @@ function mountSew(): () => void {
     svg.classList.remove('step-stitch');
     svg.classList.add('step-snip');
     setLabel('Tap the two loose threads.');
+    placePads('snip', layout.snips);
     audio.chime();
   };
 
   const placePin = (index: number) => {
-    if (pins.has(index)) return;
+    if (step !== 'pin' || pins.has(index) || Number.isNaN(index)) return;
     pins.add(index);
     svg.querySelector(`.pin-spot[data-i="${index}"]`)?.classList.add('pinned');
+    pads.find((pad) => pad.dataset.act === 'pin' && pad.dataset.id === String(index))?.classList.add('done');
     audio.pin();
     if (pins.size >= layout.pins.length) {
       step = 'stitch';
       svg.classList.remove('step-pin');
       svg.classList.add('step-stitch');
       setLabel('Drag along the pink thread.');
+      placePads('pin', []);
     }
   };
 
   const placeSnip = (index: number) => {
-    if (snips.has(index)) return;
+    if (step !== 'snip' || snips.has(index) || Number.isNaN(index)) return;
     snips.add(index);
     svg.querySelector(`.snip-spot[data-i="${index}"]`)?.classList.add('snipped');
+    pads.find((pad) => pad.dataset.act === 'snip' && pad.dataset.id === String(index))?.classList.add('done');
     audio.snip();
     if (snips.size >= layout.snips.length) {
       window.setTimeout(() => {
@@ -930,17 +1020,21 @@ function mountSew(): () => void {
     const act = hit?.getAttribute('data-act');
     if (act === 'pin' && step === 'pin') {
       event.stopPropagation();
-      placePin(Number(hit?.getAttribute('data-i')));
+      placePin(Number(hit?.getAttribute('data-id') ?? hit?.getAttribute('data-i')));
       return;
     }
     if (act === 'snip' && step === 'snip') {
       event.stopPropagation();
-      placeSnip(Number(hit?.getAttribute('data-i')));
+      placeSnip(Number(hit?.getAttribute('data-id') ?? hit?.getAttribute('data-i')));
       return;
     }
     if (step !== 'stitch') return;
     drawing = true;
-    svg.setPointerCapture?.(event.pointerId);
+    try {
+      svg.setPointerCapture(event.pointerId);
+    } catch {
+      /* Touch listeners cover the drag when this pointer id is not live. */
+    }
     last = pointOf(event);
     markNear(last);
   };
@@ -967,9 +1061,43 @@ function mountSew(): () => void {
     loose?.setAttribute('d', '');
   };
 
+  const fromTouch = (event: TouchEvent) => {
+    const touch = event.changedTouches[0] || event.touches[0];
+    if (!touch) return null;
+    return {
+      clientX: touch.clientX,
+      clientY: touch.clientY,
+      target: document.elementFromPoint(touch.clientX, touch.clientY),
+      pointerId: 1,
+      stopPropagation() {},
+    } as unknown as PointerEvent;
+  };
+  const touchStart = (event: TouchEvent) => {
+    if (step === 'stitch') event.preventDefault();
+    const pointer = fromTouch(event);
+    if (pointer) down(pointer);
+  };
+  const touchMove = (event: TouchEvent) => {
+    if (step !== 'stitch' || !drawing) return;
+    event.preventDefault();
+    const pointer = fromTouch(event);
+    if (pointer) move(pointer);
+  };
   svg.addEventListener('pointerdown', down);
   svg.addEventListener('pointermove', move);
+  svg.addEventListener('touchstart', touchStart, { passive: false });
+  svg.addEventListener('touchmove', touchMove, { passive: false });
   window.addEventListener('pointerup', up);
+  window.addEventListener('touchend', up);
+  const refreshPads = () => {
+    if (step === 'pin') placePads('pin', layout.pins);
+    else if (step === 'snip') placePads('snip', layout.snips);
+  };
+  refreshPads();
+  requestAnimationFrame(refreshPads);
+  const onResize = () => refreshPads();
+  window.addEventListener('resize', onResize);
+  sewApi = { pin: placePin, snip: placeSnip };
 
   const assist = window.setTimeout(() => {
     if (step === 'pin') {
@@ -980,9 +1108,15 @@ function mountSew(): () => void {
 
   return () => {
     window.clearTimeout(assist);
+    sewApi = null;
+    pads.forEach((pad) => pad.remove());
     svg.removeEventListener('pointerdown', down);
     svg.removeEventListener('pointermove', move);
+    svg.removeEventListener('touchstart', touchStart);
+    svg.removeEventListener('touchmove', touchMove);
     window.removeEventListener('pointerup', up);
+    window.removeEventListener('touchend', up);
+    window.removeEventListener('resize', onResize);
   };
 }
 
