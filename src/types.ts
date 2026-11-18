@@ -19,7 +19,19 @@ export type SketchId =
   | 'palazzo'
   | 'crop-jacket'
   | 'pleat-parade'
-  | 'jumpsuit';
+  | 'jumpsuit'
+  | 'ball-gown'
+  | 'princess-gown'
+  | 'mermaid-gown'
+  | 'sunset-chiffon'
+  | 'garden-roses'
+  | 'starry-gown'
+  | 'butterfly-cape'
+  | 'tiered-ruffle'
+  | 'ice-crystal'
+  | 'candy-party'
+  | 'peacock-train'
+  | 'cherry-kimono';
 
 export type AccessoryId = 'bow' | 'buttons' | 'sequins' | 'belt' | 'hat' | 'bag' | 'shoes';
 
@@ -50,7 +62,8 @@ export type Scene =
   | 'lookbook'
   | 'shelf'
   | 'gallery'
-  | 'cover';
+  | 'cover'
+  | 'reviews';
 
 export interface PersonLook {
   skin: string;
@@ -66,6 +79,24 @@ export interface PersonLook {
   streetKind?: 'dress' | 'separates';
 }
 
+export interface Wish {
+  colors: string[];
+  patterns: FabricId[];
+  tags: string[];
+  secret?: AccessoryId;
+}
+
+export type BoardBit = { kind: 'swatch'; hex: string } | { kind: 'icon'; name: string } | { kind: 'puppy' };
+
+export interface Review {
+  id: string;
+  name: string;
+  stars: number;
+  quote: string;
+  coins: number;
+  look: PersonLook;
+}
+
 export interface Customer extends PersonLook {
   id: string;
   name: string;
@@ -76,6 +107,9 @@ export interface Customer extends PersonLook {
   colorName: string;
   mood: Mood;
   show?: boolean;
+  fancy?: boolean;
+  wish: Wish;
+  board: BoardBit[];
 }
 
 export interface Outfit {
@@ -117,4 +151,6 @@ export interface SaveData {
   rainbow: boolean;
   lastTheme?: string;
   tapeFound?: boolean;
+  sewCounts?: Partial<Record<'seam' | 'pleat' | 'buttons' | 'zipper' | 'hem', number>>;
+  reviews: Review[];
 }

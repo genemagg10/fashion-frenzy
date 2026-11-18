@@ -1,10 +1,12 @@
 import type {
   AccessoryId,
+  BoardBit,
   Customer,
   DecorId,
   FabricId,
   SketchId,
   Theme,
+  Wish,
 } from './types';
 
 export interface FabricInfo {
@@ -157,6 +159,102 @@ export const SKETCHES: SketchInfo[] = [
     tags: ['bold', 'party', 'cozy'],
     price: 50,
   },
+  {
+    id: 'ball-gown',
+    name: 'Tulle Ball Gown',
+    blurb: 'A huge skirt with a tulle overlay.',
+    note: 'The skirt floats. The bodice stays close.',
+    tags: ['party', 'twirl', 'sparkly', 'soft'],
+    price: 70,
+  },
+  {
+    id: 'princess-gown',
+    name: 'Princess Gown',
+    blurb: 'Puff sleeves and a storybook skirt.',
+    note: 'Cloud sleeves, a fitted top, and a wide hem.',
+    tags: ['party', 'twirl', 'soft', 'sparkly'],
+    price: 70,
+  },
+  {
+    id: 'mermaid-gown',
+    name: 'Mermaid Gown',
+    blurb: 'Fitted through the knees, then a sequin flare.',
+    note: 'It shimmers when the light moves.',
+    tags: ['party', 'sparkly', 'bold'],
+    price: 75,
+  },
+  {
+    id: 'sunset-chiffon',
+    name: 'Sunset Chiffon',
+    blurb: 'A dress that fades from pink to gold.',
+    note: 'Light cloth, like the end of the day.',
+    tags: ['soft', 'twirl', 'party'],
+    price: 70,
+  },
+  {
+    id: 'garden-roses',
+    name: 'Flower Garden Gown',
+    blurb: 'Tiny roses stitched all over.',
+    note: 'A gown for someone who talks to flowers.',
+    tags: ['floral', 'party', 'soft'],
+    price: 75,
+  },
+  {
+    id: 'starry-gown',
+    name: 'Starry Night Gown',
+    blurb: 'A dark dress with twinkling stars.',
+    note: 'Wear it when the sky is the guest of honor.',
+    tags: ['sparkly', 'party', 'bold'],
+    price: 75,
+  },
+  {
+    id: 'butterfly-cape',
+    name: 'Butterfly Cape Dress',
+    blurb: 'Wings at the shoulders and a soft skirt.',
+    note: 'The cape opens like wings.',
+    tags: ['cape', 'party', 'sparkly', 'twirl'],
+    price: 70,
+  },
+  {
+    id: 'tiered-ruffle',
+    name: 'Ruffled Tier Gown',
+    blurb: 'Three flounces, one after another.',
+    note: 'Each tier gets a little wider.',
+    tags: ['twirl', 'party', 'soft'],
+    price: 70,
+  },
+  {
+    id: 'ice-crystal',
+    name: 'Ice Crystal Gown',
+    blurb: 'Pale cloth with little crystal sparks.',
+    note: 'Cool colors, warm stitching.',
+    tags: ['sparkly', 'soft', 'party'],
+    price: 75,
+  },
+  {
+    id: 'candy-party',
+    name: 'Candy Party Dress',
+    blurb: 'Pastel stripes and a party bow.',
+    note: 'Short, sweet, and ready to dance.',
+    tags: ['party', 'twirl', 'sparkly', 'bold'],
+    price: 65,
+  },
+  {
+    id: 'peacock-train',
+    name: 'Peacock Train',
+    blurb: 'A long train with jewel-colored eyes.',
+    note: 'The train needs room to sweep.',
+    tags: ['party', 'bold', 'sparkly', 'floral'],
+    price: 80,
+  },
+  {
+    id: 'cherry-kimono',
+    name: 'Cherry Blossom Wrap',
+    blurb: 'A kimono-inspired dress with blossoms.',
+    note: 'Wide sleeves, a bright obi, and tiny flowers.',
+    tags: ['floral', 'soft', 'party'],
+    price: 75,
+  },
 ];
 
 export const ACCESSORIES: AccessoryInfo[] = [
@@ -188,12 +286,18 @@ export const CUSTOMERS: Customer[] = [
     streetKind: 'dress',
     streetTop: '#e23b6a',
     streetBottom: '#2a211c',
-    request: 'Something sparkly for my birthday party!',
-    hint: 'She loves pink and anything that shines.',
+    request: 'I want to shine at my birthday!',
+    hint: 'The pictures are clues. You choose the rest.',
     icon: 'sparkle',
     color: '#E56B93',
-    colorName: 'pink',
+    colorName: 'rose',
     mood: 'sparkly',
+    wish: { colors: ['#E56B93', '#F4B8C8', '#C23B4B'], patterns: ['sequins', 'polka'], tags: ['sparkly', 'party'], secret: 'bow' },
+    board: [
+      { kind: 'swatch', hex: '#E56B93' },
+      { kind: 'swatch', hex: '#F4B8C8' },
+      { kind: 'icon', name: 'sparkle' },
+    ],
   },
   {
     id: 'theo',
@@ -205,12 +309,18 @@ export const CUSTOMERS: Customer[] = [
     streetKind: 'separates',
     streetTop: '#2f6f86',
     streetBottom: '#e2a03a',
-    request: 'A cozy look for a rainy day, please.',
-    hint: 'Blue, soft, and warm would feel just right.',
+    request: 'I love the ocean on a quiet day.',
+    hint: 'Blues and teals feel like the sea.',
     icon: 'umbrella',
     color: '#8EC6E6',
-    colorName: 'blue',
+    colorName: 'sky',
     mood: 'cozy',
+    wish: { colors: ['#8EC6E6', '#2F7C8A', '#24315C'], patterns: ['velvet', 'denim', 'solid'], tags: ['cozy'], secret: 'belt' },
+    board: [
+      { kind: 'swatch', hex: '#8EC6E6' },
+      { kind: 'swatch', hex: '#2F7C8A' },
+      { kind: 'icon', name: 'umbrella' },
+    ],
   },
   {
     id: 'noor',
@@ -221,12 +331,19 @@ export const CUSTOMERS: Customer[] = [
     streetKind: 'dress',
     streetTop: '#c45b8a',
     streetBottom: '#3f6b52',
-    request: 'I want to look like a garden.',
-    hint: 'Flowers and green are her favorites.',
+    request: 'I want to look like a garden after rain.',
+    hint: 'Greens and little flowers, if you see them.',
     icon: 'flower',
     color: '#3E8F62',
-    colorName: 'green',
+    colorName: 'leaf',
     mood: 'floral',
+    fancy: true,
+    wish: { colors: ['#3E8F62', '#A8C3A0'], patterns: ['floral', 'tulle'], tags: ['floral'], secret: 'bow' },
+    board: [
+      { kind: 'swatch', hex: '#3E8F62' },
+      { kind: 'swatch', hex: '#A8C3A0' },
+      { kind: 'icon', name: 'flower' },
+    ],
   },
   {
     id: 'jo',
@@ -237,12 +354,18 @@ export const CUSTOMERS: Customer[] = [
     streetKind: 'separates',
     streetTop: '#f2c14e',
     streetBottom: '#6b2a4a',
-    request: 'I’m going dancing. Big and twirly, please!',
-    hint: 'Purple and a skirt that can spin.',
+    request: 'Play me a song I can spin to.',
+    hint: 'Think of music, purple, and a skirt that moves.',
     icon: 'music',
     color: '#7A4E8A',
-    colorName: 'purple',
+    colorName: 'plum',
     mood: 'twirl',
+    wish: { colors: ['#7A4E8A', '#CDB4E4'], patterns: ['tulle', 'polka', 'sequins'], tags: ['twirl', 'party'], secret: 'sequins' },
+    board: [
+      { kind: 'swatch', hex: '#7A4E8A' },
+      { kind: 'swatch', hex: '#CDB4E4' },
+      { kind: 'icon', name: 'music' },
+    ],
   },
   {
     id: 'amos',
@@ -253,12 +376,18 @@ export const CUSTOMERS: Customer[] = [
     streetKind: 'separates',
     streetTop: '#f4f1ea',
     streetBottom: '#1e2a4a',
-    request: 'I need a sharp look for a recital.',
-    hint: 'Red, and something with a strong shape.',
+    request: 'The stage lights are waiting for me.',
+    hint: 'A brave color and a strong shape.',
     icon: 'star',
     color: '#C23B4B',
-    colorName: 'red',
+    colorName: 'cherry',
     mood: 'bold',
+    wish: { colors: ['#C23B4B', '#E8943A'], patterns: ['stripes', 'solid'], tags: ['bold'], secret: 'buttons' },
+    board: [
+      { kind: 'swatch', hex: '#C23B4B' },
+      { kind: 'icon', name: 'star' },
+      { kind: 'swatch', hex: '#E8943A' },
+    ],
   },
   {
     id: 'bea',
@@ -269,12 +398,19 @@ export const CUSTOMERS: Customer[] = [
     streetKind: 'dress',
     streetTop: '#7a4e8a',
     streetBottom: '#f2c14e',
-    request: 'Something soft for tea with Grandma.',
-    hint: 'Cream, lilac, and gentle shapes.',
+    request: 'Tea with Grandma should feel like a cloud.',
+    hint: 'Soft colors. Nothing too sharp.',
     icon: 'cup',
     color: '#CDB4E4',
     colorName: 'lilac',
     mood: 'soft',
+    fancy: true,
+    wish: { colors: ['#CDB4E4', '#F7F1E6', '#F4B8C8'], patterns: ['velvet', 'solid'], tags: ['soft'], secret: 'bow' },
+    board: [
+      { kind: 'swatch', hex: '#F7F1E6' },
+      { kind: 'swatch', hex: '#CDB4E4' },
+      { kind: 'icon', name: 'cup' },
+    ],
   },
   {
     id: 'rio',
@@ -286,12 +422,18 @@ export const CUSTOMERS: Customer[] = [
     streetKind: 'dress',
     streetTop: '#e07a3d',
     streetBottom: '#2a211c',
-    request: 'Surprise me with your boldest color!',
-    hint: 'The brighter, the better.',
+    request: 'Surprise me with a color that shouts.',
+    hint: 'Bright is friendly. Loud is welcome.',
     icon: 'palette',
     color: '#E8943A',
-    colorName: 'orange',
+    colorName: 'marigold',
     mood: 'bold',
+    wish: { colors: ['#E8943A', '#C23B4B', '#7A4E8A'], patterns: ['stripes', 'sequins'], tags: ['bold', 'party'], secret: 'hat' },
+    board: [
+      { kind: 'swatch', hex: '#E8943A' },
+      { kind: 'icon', name: 'palette' },
+      { kind: 'swatch', hex: '#C23B4B' },
+    ],
   },
   {
     id: 'sasha',
@@ -302,12 +444,19 @@ export const CUSTOMERS: Customer[] = [
     streetKind: 'separates',
     streetTop: '#f7f1e6',
     streetBottom: '#2f7c8a',
-    request: 'A cape! I feel like a story today.',
-    hint: 'Teal, and a cape if you have one.',
+    request: 'Today I feel like a story with a breeze.',
+    hint: 'Sea colors, and maybe something that can fly behind you.',
     icon: 'book',
     color: '#2F7C8A',
-    colorName: 'teal',
+    colorName: 'sea',
     mood: 'cape',
+    fancy: true,
+    wish: { colors: ['#2F7C8A', '#24315C', '#8EC6E6'], patterns: ['solid', 'velvet'], tags: ['cape', 'bold'], secret: 'belt' },
+    board: [
+      { kind: 'swatch', hex: '#2F7C8A' },
+      { kind: 'swatch', hex: '#8EC6E6' },
+      { kind: 'icon', name: 'book' },
+    ],
   },
 ];
 
@@ -328,6 +477,12 @@ export const JULES: Customer = {
   colorName: 'gold',
   mood: 'party',
   show: true,
+  wish: { colors: ['#F6D56B', '#E56B93', '#7A4E8A'], patterns: ['sequins', 'tulle', 'solid'], tags: ['party', 'sparkly'] },
+  board: [
+    { kind: 'swatch', hex: '#F6D56B' },
+    { kind: 'icon', name: 'mic' },
+    { kind: 'swatch', hex: '#E56B93' },
+  ],
 };
 
 export const THEMES: Theme[] = [
@@ -435,6 +590,115 @@ export function colorName(hex: string): string {
     }
   }
   return best.name;
+}
+
+export const RUNWAY_GOWNS: SketchId[] = [
+  'ball-gown',
+  'princess-gown',
+  'mermaid-gown',
+  'sunset-chiffon',
+  'garden-roses',
+  'starry-gown',
+  'butterfly-cape',
+  'tiered-ruffle',
+  'ice-crystal',
+  'candy-party',
+  'peacock-train',
+  'cherry-kimono',
+];
+
+const ROUND_BRIEFS: { request: string; hint: string; wish: Wish; board: BoardBit[] }[] = [
+  {
+    request: 'Something rainy and cheerful, please!',
+    hint: 'Puddles and sunshine can live in one outfit.',
+    wish: { colors: ['#8EC6E6', '#F6D56B', '#2F7C8A'], patterns: ['polka', 'stripes', 'solid'], tags: ['cozy', 'bold'], secret: 'buttons' },
+    board: [
+      { kind: 'swatch', hex: '#8EC6E6' },
+      { kind: 'swatch', hex: '#F6D56B' },
+      { kind: 'icon', name: 'umbrella' },
+    ],
+  },
+  {
+    request: 'Can you match my puppy?',
+    hint: 'Warm, soft, and a little bit fluffy.',
+    wish: { colors: ['#E8943A', '#F3A57A', '#6B4332'], patterns: ['velvet', 'solid'], tags: ['soft', 'cozy'], secret: 'bow' },
+    board: [{ kind: 'puppy' }, { kind: 'swatch', hex: '#E8943A' }, { kind: 'swatch', hex: '#F3A57A' }],
+  },
+  {
+    request: 'I have a recital tonight!',
+    hint: 'The stage likes a brave color and a shape that moves.',
+    wish: { colors: ['#C23B4B', '#7A4E8A', '#F6D56B'], patterns: ['sequins', 'tulle'], tags: ['party', 'twirl', 'bold'], secret: 'sequins' },
+    board: [
+      { kind: 'swatch', hex: '#C23B4B' },
+      { kind: 'icon', name: 'star' },
+      { kind: 'swatch', hex: '#7A4E8A' },
+    ],
+  },
+  {
+    request: 'Surprise me with a gown.',
+    hint: 'The bigger the skirt, the better the story.',
+    wish: { colors: ['#CDB4E4', '#E56B93', '#F7F1E6'], patterns: ['tulle', 'floral', 'sequins'], tags: ['party', 'twirl', 'sparkly'], secret: 'bow' },
+    board: [
+      { kind: 'swatch', hex: '#CDB4E4' },
+      { kind: 'swatch', hex: '#E56B93' },
+      { kind: 'icon', name: 'sparkle' },
+    ],
+  },
+];
+
+export function briefFor(served: number): { request: string; hint: string; wish: Wish; board: BoardBit[] } | null {
+  if (served < 1) return null;
+  return ROUND_BRIEFS[(served - 1) % ROUND_BRIEFS.length];
+}
+
+export function grantRoundRewards(save: {
+  sketches: SketchId[];
+  fabrics: FabricId[];
+  accessories: AccessoryId[];
+}): string[] {
+  const notes: string[] = [];
+  const sketchQueue: SketchId[] = [
+    'garden-gown',
+    'ball-gown',
+    'princess-gown',
+    'puff-pencil',
+    'starry-gown',
+    'garden-roses',
+    'palazzo',
+    'mermaid-gown',
+    'sunset-chiffon',
+    'pleat-parade',
+    'butterfly-cape',
+    'tiered-ruffle',
+    'crop-jacket',
+    'ice-crystal',
+    'candy-party',
+    'jumpsuit',
+    'peacock-train',
+    'cherry-kimono',
+  ];
+  const nextSketch = sketchQueue.find((id) => !save.sketches.includes(id));
+  if (nextSketch) {
+    save.sketches.push(nextSketch);
+    notes.push(sketchById(nextSketch).name);
+  }
+  const fabricQueue: FabricId[] = ['floral', 'denim', 'tulle', 'velvet'];
+  if (save.sketches.length % 2 === 0) {
+    const nextFabric = fabricQueue.find((id) => !save.fabrics.includes(id));
+    if (nextFabric) {
+      save.fabrics.push(nextFabric);
+      notes.push(fabricById(nextFabric).name);
+    }
+  }
+  const trimQueue: AccessoryId[] = ['sequins', 'belt', 'hat', 'bag'];
+  if (save.sketches.length % 3 === 0) {
+    const nextTrim = trimQueue.find((id) => !save.accessories.includes(id));
+    if (nextTrim) {
+      save.accessories.push(nextTrim);
+      notes.push(accessoryById(nextTrim).name);
+    }
+  }
+  return notes;
 }
 
 export const STARTER_FABRICS: FabricId[] = FABRICS.filter((f) => f.starter).map((f) => f.id);
