@@ -925,10 +925,19 @@ export function renderGarment(
         (space === 'worn' ? wornFeet(outfit, measure) : '')
       : '';
 
+  const sketchMarks =
+    mode === 'sketch' && (outfit.sketchId === 'rain-coat' || outfit.sketchId === 'crop-jacket')
+      ? `<g fill="none" stroke="#2a241f" stroke-width="2.3" stroke-linejoin="round" stroke-linecap="round">
+          <path d="M ${measure.cx} ${measure.neckY + 10} L ${measure.cx + 22} ${measure.neckY - 4} L ${measure.cx + measure.shoulderHW * 0.5} ${measure.shoulderY + 14} L ${measure.cx + 40} ${measure.bustY + 28}"/>
+          <path d="M ${measure.cx} ${measure.neckY + 10} L ${measure.cx - 22} ${measure.neckY - 4} L ${measure.cx - measure.shoulderHW * 0.5} ${measure.shoulderY + 14} L ${measure.cx - 40} ${measure.bustY + 28}"/>
+          <path d="M ${measure.cx} ${measure.neckY + 22} L ${measure.cx} ${outfit.sketchId === 'crop-jacket' ? measure.waistY + 8 : measure.hemY - 24}"/>
+          ${outfit.sketchId === 'rain-coat' ? `<rect x="${measure.cx - 70}" y="${measure.hipY}" width="36" height="28" rx="3"/><rect x="${measure.cx + 28}" y="${measure.hipY}" width="36" height="28" rx="3"/>` : ''}
+        </g>`
+      : '';
   return {
     defs,
     back: draw('back'),
-    main: draw('main') + draw('skirt'),
+    main: draw('main') + draw('skirt') + sketchMarks,
     sleeves: draw('sleeve'),
     shade,
     extras,
