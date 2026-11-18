@@ -1589,7 +1589,7 @@ function reviewsScene(): string {
     )
     .join('');
   return `${hud()}
-    <div class="book-page">
+    <div class="guest-page">
       <div class="sketch-top">
         <button class="icon-btn" type="button" data-act="back" aria-label="Back">${icon('back')}</button>
         <div>
