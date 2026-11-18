@@ -825,7 +825,7 @@ h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); line-height: 1.05; }
   image-rendering: pixelated;
   image-rendering: crisp-edges;
 }
-.chibi { position: relative; width: 192px; height: 288px; flex: none; }
+.chibi { position: relative; width: 256px; height: 384px; flex: none; }
 .chibi i, .chibi b {
   position: absolute;
   inset: 0;
@@ -837,21 +837,21 @@ h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); line-height: 1.05; }
 .pose-idle { animation: chibi-bob 1.8s ease-in-out infinite; }
 .pose-cheer, .pose-twirl { animation: chibi-joy 0.7s ease-in-out infinite; }
 .pose-stride i {
-  background-size: calc(var(--frames) * 100%) 100%;
+  background-size: auto 100%;
   animation: walkframes 0.72s steps(6, end) infinite;
 }
 .pose-stride b, .pose-cheer b, .pose-twirl b, .pose-frown b { display: none; }
 .shop-stage { position: relative; width: 100%; height: 100%; overflow: hidden; }
 .shop-bg { width: 100%; height: 100%; object-fit: cover; object-position: center bottom; display: block; }
 .shop-customer { position: absolute; left: 50%; bottom: 7%; transform: translateX(-50%); z-index: 2; }
-.shop-customer .chibi { width: 128px; height: 192px; }
+.shop-customer .chibi { width: 256px; height: 384px; }
 .hotspot { position: absolute; border: 0; background: transparent; padding: 0; min-width: 44px; min-height: 44px; }
 .hot-lamp { left: 36%; top: 0; width: 28%; height: 18%; }
 .hot-cat { left: 40%; top: 32%; width: 20%; height: 18%; }
 .hot-poster { left: 1%; top: 8%; width: 20%; height: 22%; }
 .meter { display: flex; gap: 10px; align-items: center; background: #fff4ea; border-radius: 16px; padding: 6px 8px; }
-.meter-face { width: 64px; height: 72px; overflow: hidden; flex: none; }
-.meter-face .chibi { width: 64px; height: 96px; }
+.meter-face { width: 128px; height: 120px; overflow: hidden; flex: none; }
+.meter-face .chibi { width: 128px; height: 192px; }
 .meter-label { margin: 0; font-weight: 800; }
 .hearts { display: flex; gap: 4px; margin-top: 4px; }
 .hearts i { width: 14px; height: 14px; border-radius: 50%; background: #eadfd4; display: block; }
@@ -863,17 +863,18 @@ h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); line-height: 1.05; }
 .receipt li { display: flex; justify-content: space-between; gap: 12px; font-weight: 700; }
 .receipt .total { border-top: 2px solid var(--line); padding-top: 4px; }
 .review-card { display: flex; gap: 10px; align-items: center; background: #fff; border-radius: 16px; padding: 8px; }
-.review-face { width: 72px; height: 96px; overflow: hidden; flex: none; }
-.review-face .chibi { width: 72px; height: 108px; }
+.review-face { width: 96px; height: 120px; overflow: hidden; flex: none; }
+.review-face .chibi { width: 96px; height: 144px; }
 .review-card h2, .review-card p { margin: 0; }
 .dock-row { display: flex; gap: 8px; }
 .dock-row .btn { flex: 1; min-height: 48px; }
 .pat-swatch { background-size: 32px 32px; background-repeat: repeat; }
 .shelf-art { width: 64px; height: 64px; object-fit: contain; }
-.gown-row .chibi { width: 96px; height: 144px; }
-.model-slot { width: 192px; }
-.model-slot .chibi { width: 192px; height: 288px; }
-.reaction-person .chibi { width: auto; height: 78cqh; aspect-ratio: 64 / 96; }
+.gown-row .chibi { width: 128px; height: 192px; }
+.model-slot { width: 256px; }
+.model-slot .chibi { width: 256px; height: 384px; }
+.reaction-person .chibi { width: auto; height: 78cqh; aspect-ratio: 2 / 3; }
+.pip-svg { width: 64px; height: 64px; }
 .fx { position: absolute; left: 8%; right: 8%; bottom: 8%; height: 28%; pointer-events: none; }
 .fx.fx-sparkle, .fx.fx-stars { background: radial-gradient(circle, #fff6c8 1.5px, transparent 2px) 0 0 / 14px 14px; animation: twinkle 0.9s steps(2) infinite; }
 .fx i { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: #f2a0b8; animation: fall 1.4s linear infinite; }
@@ -899,7 +900,7 @@ h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); line-height: 1.05; }
 @keyframes blinkshow { 0%, 88%, 100% { opacity: 0; } 92%, 96% { opacity: 1; } }
 @keyframes chibi-bob { 50% { transform: translateY(-2px); } }
 @keyframes chibi-joy { 50% { transform: translateY(-8px); } }
-@keyframes walkframes { to { background-position: 100% 0; } }
+@keyframes walkframes { to { background-position: -1536px 0; } }
 @keyframes hem-sway { 50% { transform: rotate(2deg); } }
 
 @media (prefers-reduced-motion: reduce) {
