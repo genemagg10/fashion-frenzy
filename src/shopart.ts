@@ -8,6 +8,16 @@ export function shopSvg(opts: {
 }): string {
   const flowers = opts.decor.includes('flowers');
   return `<div class="shop-stage illustrated">
+    <div class="shop-bunting" aria-hidden="true">${Array.from({ length: 9 }, () => '<i></i>').join('')}</div>
+    <div class="shop-window" aria-hidden="true">
+      <div class="window-view">
+        <i class="cloud"></i>
+        <i class="cloud two"></i>
+        <i class="hill"></i>
+        <i class="sun"></i>
+      </div>
+      <b class="shop-sign">Ella’s</b>
+    </div>
     <img class="prop prop-rack" alt="" src="${propArt('clothes-rack')}">
     <img class="prop prop-mirror" alt="" src="${propArt('mirror')}">
     <img class="prop prop-bolts" alt="" src="${propArt('fabric-bolts')}">
