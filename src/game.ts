@@ -21,7 +21,23 @@ import { icon } from './icons';
 import { grade, liveGrade, wishFromTheme, type Draft, type Grade } from './score';
 import { sewKind, sewPlan, type SewKind } from './sew';
 import { shopSvg } from './shopart';
-import { decorURL, dressFormURL, fanURL, photogURL, pipURL, puppyURL, swatchURL, trimURL, sketchURL } from './sprites';
+import {
+  customerBust,
+  decorArt,
+  filesFor,
+  modelSignature,
+  peekSprite,
+  pipSprite,
+  preload,
+  puppyURL,
+  runwayArt,
+  sewForm,
+  swatchURL,
+  tintedSprite,
+  trimURL,
+  type BustExpr,
+  type PipExpr,
+} from './spritekit';
 import { loadSave, writeSave } from './storage';
 import type {
   AccessoryId,
@@ -176,7 +192,83 @@ export function boot(): void {
   draw();
 }
 
+function showLoader(on: boolean): void {
+  let el = document.getElementById('sprite-loader');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'sprite-loader';
+    el.className = 'sprite-loader';
+    el.innerHTML = `<img alt="" src="${pipSprite('happy')}"><p>Pip is threading a needle…</p>`;
+    document.body.appendChild(el);
+  }
+  el.classList.toggle('on', on);
+}
+
+let paintToken = 0;
+
+function neededFiles(): string[] {
+  const extra: string[] = [];
+  const who = session.customer?.id;
+  if (who) {
+    extra.push(`sprites/customers/full/${who}.png`);
+    for (const expr of ['happy', 'love', 'thinking', 'disappointed'] as const) {
+      extra.push(`sprites/customers/bust/${who}-${expr}.png`);
+    }
+  }
+  if (session.draft) {
+    const id = session.draft.sketchId;
+    extra.push(
+      `sprites/models/tint/${id}.png`,
+      `sprites/models/tint/${id}.mask.png`,
+      `sprites/forms/${id}.png`,
+      `sprites/forms/${id}.mask.png`,
+      `sprites/garments/${id}.png`,
+      `sprites/models/signature/${id}.png`,
+    );
+  }
+  if (session.scene === 'sketch') {
+    for (const sketch of unlockedSketches()) extra.push(`sprites/garments/${sketch.id}.png`);
+  }
+  if (session.scene === 'gallery') {
+    for (const sketch of SKETCHES) extra.push(`sprites/models/signature/${sketch.id}.png`);
+    for (const person of CUSTOMERS) extra.push(`sprites/customers/full/${person.id}.png`);
+  }
+  if (session.scene === 'runway' && session.show) {
+    for (const rival of session.show.rivals) extra.push(`sprites/models/signature/${rival.outfit.sketchId}.png`);
+    for (const look of session.show.looks) {
+      extra.push(`sprites/models/tint/${look.sketchId}.png`, `sprites/models/tint/${look.sketchId}.mask.png`);
+    }
+  }
+  if (session.scene === 'lookbook' || session.scene === 'awards') {
+    const looks = session.scene === 'lookbook' ? save.lookbook : (session.show?.looks ?? []);
+    for (const look of looks) extra.push(`sprites/forms/${look.sketchId}.png`, `sprites/forms/${look.sketchId}.mask.png`);
+  }
+  if (session.scene === 'reviews') {
+    for (const review of save.reviews) {
+      const id = review.name.toLowerCase();
+      extra.push(`sprites/customers/bust/${id}-happy.png`, `sprites/customers/bust/${id}-love.png`);
+    }
+  }
+  return filesFor(session.scene, extra);
+}
+
 function draw(): void {
+  const token = ++paintToken;
+  const missing = neededFiles().filter((file) => !peekSprite(file));
+  if (missing.length) {
+    showLoader(true);
+    void preload(missing).then(() => {
+      if (token !== paintToken) return;
+      showLoader(false);
+      paint();
+    });
+    return;
+  }
+  showLoader(false);
+  paint();
+}
+
+function paint(): void {
   cleanup();
   cleanup = () => {};
   runway.skip = null;
@@ -527,10 +619,22 @@ function affordable(): boolean {
   return false;
 }
 
+function pipMood(): PipExpr {
+  if (session.scene === 'reaction' && (session.lastScore?.review ?? 0) >= 5) return 'cheer';
+  if (session.scene === 'studio' && session.draft && (session.phase === 'fabric' || session.phase === 'finish')) {
+    const mood = liveGrade(session.draft, session.customer ?? CUSTOMERS[0], activeWish()).mood;
+    if (mood === 'sparkle') return 'love';
+    if (mood === 'think') return 'thinking';
+    return 'disappointed';
+  }
+  if (session.scene === 'studio' && session.phase === 'sew') return 'thinking';
+  return 'happy';
+}
+
 function pip(line: string): string {
   if (!line) return '';
   return `<div class="pip">
-    <img class="pixel pip-svg" alt="" width="64" height="64" src="${pipURL()}">
+    <img class="sprite pip-svg" alt="" width="72" height="72" src="${pipSprite(pipMood())}">
     <p>${esc(line)}</p>
   </div>`;
 }
@@ -589,16 +693,9 @@ function pipLine(): string {
 }
 
 function titleScene(): string {
-  const outfit: Outfit = {
-    id: 'title',
-    sketchId: 'garden-gown',
-    pattern: 'floral',
-    color: session.titleColor,
-    accessories: ['bow'],
-  };
   return `<section class="title-screen">
     <button class="icon-btn mute-corner" type="button" data-act="mute" aria-label="${save.muted ? 'Unmute' : 'Mute'}">${icon(save.muted ? 'mute' : 'sound')}</button>
-    <div class="title-art">${renderDressForm(outfit, 'titleform')}</div>
+    <div class="title-art"><img class="sprite title-model" alt="" src="${modelSignature('ball-gown')}"></div>
     <div class="title-copy">
       <p class="kicker">a boutique game</p>
       <h1>Fashion Frenzy</h1>
@@ -610,21 +707,12 @@ function titleScene(): string {
 }
 
 function mountTitle(): () => void {
-  const colors = ['#E56B93', '#7A4E8A', '#3E8F62', '#E8943A', '#24315C'];
+  const looks = ['ball-gown', 'starry-gown', 'princess-gown', 'garden-roses', 'cherry-kimono'] as const;
   let index = 0;
   const timer = window.setInterval(() => {
-    index = (index + 1) % colors.length;
-    session.titleColor = colors[index];
-    const slot = document.querySelector('.title-art');
-    if (!slot) return;
-    const outfit: Outfit = {
-      id: 'title',
-      sketchId: 'garden-gown',
-      pattern: index % 2 === 0 ? 'floral' : 'sequins',
-      color: session.titleColor,
-      accessories: ['bow'],
-    };
-    slot.innerHTML = renderDressForm(outfit, `title${index}`);
+    index = (index + 1) % looks.length;
+    const img = document.querySelector('.title-model') as HTMLImageElement | null;
+    if (img) img.src = modelSignature(looks[index]);
   }, 2200);
   return () => window.clearInterval(timer);
 }
@@ -633,10 +721,8 @@ function shopScene(): string {
   const customer = session.customer ?? CUSTOMERS[0];
   const art = shopSvg({
     decor: save.decor,
-    customer: renderPerson({ look: customer, pose: 'idle', uid: nextId('shop'), embed: true }),
-    cat: session.cat,
-    disco: session.disco,
-    posterOn: save.tutorialDone && save.customersServed >= 2,
+    customerId: customer.id,
+    posterOn: save.tutorialDone && save.customersServed >= (reputation() >= 4 ? 2 : 3),
   });
   const show = Boolean(customer.show);
   return `${hud()}
@@ -794,10 +880,10 @@ function meterBlock(draft: Draft): string {
   const g = liveGrade(draft, customer, activeWish());
   const filled = Math.round(g.overall * 5);
   const hearts = [1, 2, 3, 4, 5].map((n) => `<i class="${n <= filled ? 'on' : ''}"></i>`).join('');
-  const pose = g.mood === 'sparkle' ? 'cheer' : g.mood === 'think' ? 'think' : 'frown';
+  const expr: BustExpr = g.mood === 'sparkle' ? 'love' : g.mood === 'think' ? 'thinking' : 'disappointed';
   const label = g.mood === 'sparkle' ? 'They love this' : g.mood === 'think' ? 'Hmm, close' : 'Not quite yet';
   return `<div class="meter mood-${g.mood}" data-mood="${g.mood}">
-    <div class="meter-face">${renderPerson({ look: customer, pose, uid: 'meter' })}</div>
+    <div class="meter-face"><img class="sprite sprite-bust" alt="" src="${customerBust(customer.id, expr)}"></div>
     <div>
       <p class="meter-label">${label}</p>
       <div class="hearts" aria-label="Happiness ${filled} of 5">${hearts}</div>
@@ -956,6 +1042,11 @@ function mountSew(): () => void {
   const taps = new Set<number>();
   svg.dataset.sewKind = plan.kind;
   svg.dataset.sewShape = plan.curved ? 'curved' : 'straight';
+  const showSewPicture = (which: 'pattern' | 'half' | 'draped') => {
+    const photo = svg.querySelector('#form-photo');
+    if (photo) photo.setAttribute('href', sewForm(which === 'half' ? 'half' : which === 'draped' ? 'draped' : 'pattern'));
+  };
+  showSewPicture(step === 'stitch' ? 'half' : step === 'tap' ? 'draped' : 'pattern');
   let drawing = false;
   let last: { x: number; y: number } | null = null;
   let lastSound = 0;
@@ -1116,6 +1207,7 @@ function mountSew(): () => void {
       return;
     }
     step = 'snip';
+    showSewPicture('half');
     svg.classList.remove('step-stitch');
     svg.classList.add('step-snip', 'sew-snap');
     setLabel('Tap the two loose threads.');
@@ -1132,6 +1224,7 @@ function mountSew(): () => void {
     audio.pin();
     if (pins.size >= layout.pins.length) {
       step = 'stitch';
+      showSewPicture('half');
       svg.classList.remove('step-pin');
       svg.classList.add('step-stitch');
       setLabel(plan.label);
@@ -1430,9 +1523,14 @@ function reactionScene(): string {
       ${hearts()}
       <div class="reaction-person">${renderPerson({ look: customer, outfit, pose: 'twirl', uid: nextId('react') })}</div>
       <section class="panel slim">
-        <div class="stars" aria-label="${score.review} star review">${[1, 2, 3, 4, 5].map((n) => `<span class="${n <= score.review ? 'on' : ''}">${icon('star')}</span>`).join('')}</div>
-        <h1>${esc(customer.name)}’s review</h1>
-        <p class="request-line">${esc(score.line)}</p>
+        <div class="review-head">
+          <div class="review-face"><img class="sprite sprite-bust" alt="" src="${customerBust(customer.id, score.review >= 4 ? 'love' : score.review <= 2 ? 'disappointed' : score.mood === 'think' ? 'thinking' : 'happy')}"></div>
+          <div>
+            <div class="stars" aria-label="${score.review} star review">${[1, 2, 3, 4, 5].map((n) => `<span class="${n <= score.review ? 'on' : ''}">${icon('star')}</span>`).join('')}</div>
+            <h1>${esc(customer.name)}’s review</h1>
+            <p class="request-line">${esc(score.line)}</p>
+          </div>
+        </div>
         <ul class="receipt">
           <li><span>Color</span><b>${score.starsFor.color}/5</b></li>
           <li><span>Cloth</span><b>${score.starsFor.cloth}/5</b></li>
@@ -1454,8 +1552,8 @@ function reactionScene(): string {
 function reviewsScene(): string {
   const cards = save.reviews
     .map(
-      (review, index) => `<article class="review-card">
-        <div class="review-face">${renderPerson({ look: review.look, pose: review.stars >= 4 ? 'cheer' : 'idle', uid: `rev${index}` })}</div>
+      (review) => `<article class="review-card">
+        <div class="review-face"><img class="sprite sprite-bust" alt="" src="${customerBust(review.name.toLowerCase(), review.stars >= 4 ? 'love' : 'happy')}"></div>
         <div>
           <h2>${esc(review.name)}</h2>
           <p class="stars">${[1, 2, 3, 4, 5].map((n) => `<span class="${n <= review.stars ? 'on' : ''}">${icon('star')}</span>`).join('')}</p>
@@ -1487,9 +1585,10 @@ function hearts(): string {
 function confetti(): string {
   const bits = Array.from({ length: 26 }, (_, index) => {
     const left = (index * 37) % 100;
+    const top = (index * 23) % 86;
     const delay = (index % 7) * 0.07;
     const color = ['#e56b93', '#f2c14e', '#7dce82', '#8ec6e6', '#c9a6e0'][index % 5];
-    return `<i style="left:${left}%;animation-delay:${delay}s;background:${color}"></i>`;
+    return `<i style="left:${left}%;top:${top}%;animation-delay:${delay}s;background:${color}"></i>`;
   }).join('');
   return `<div class="confetti" aria-hidden="true">${bits}</div>`;
 }
@@ -1517,7 +1616,7 @@ async function shareCurrent(): Promise<void> {
     : session.lastOutfit;
   if (!outfit) return;
   try {
-    const url = dressFormURL(outfit, 'fashion');
+    const url = tintedSprite('form', outfit.sketchId, outfit.color, outfit.pattern);
     const image = new Image();
     await new Promise<void>((resolve, reject) => {
       image.onload = () => resolve();
@@ -1531,7 +1630,7 @@ async function shareCurrent(): Promise<void> {
     if (!ctx) throw new Error('canvas');
     ctx.fillStyle = '#fbf6f0';
     ctx.fillRect(0, 0, 1080, 1440);
-    ctx.imageSmoothingEnabled = false;
+    ctx.imageSmoothingEnabled = true;
     ctx.drawImage(image, 270, 240, 540, 864);
     ctx.fillStyle = '#2a211c';
     ctx.textAlign = 'center';
@@ -1581,8 +1680,8 @@ function lookbookScene(): string {
   }
   const cards = save.lookbook
     .map(
-      (look, index) => `<button class="look-card" type="button" data-act="open-look" data-id="${esc(look.id)}">
-        ${renderDressForm(look, `lb${index}`)}
+      (look) => `<button class="look-card" type="button" data-act="open-look" data-id="${esc(look.id)}">
+        <img class="sprite sprite-card" alt="" src="${modelSignature(look.sketchId)}">
         <span>${esc(look.label ?? sketchById(look.sketchId).name)}</span>
       </button>`,
     )
@@ -1637,12 +1736,12 @@ function shelfCard(
   const tag = owned ? 'Yours' : secret ? 'Found' : `${price} coins`;
   const art =
     kind === 'sketch'
-      ? sketchURL(id as SketchId)
+      ? modelSignature(id)
       : kind === 'fabric'
         ? swatchURL(id as FabricId, '#e56b93')
         : kind === 'accessory'
-          ? trimURL(id as AccessoryId)
-          : decorURL(id);
+          ? trimURL(id)
+          : decorArt(id);
   return `<button class="shelf-card ${owned ? 'owned' : ''}" type="button" data-act="buy" data-kind="${kind}" data-id="${id}">
     <img class="pixel shelf-art" alt="" src="${art}">
     <strong>${esc(name)}</strong>
@@ -1783,8 +1882,9 @@ function runwayScene(): string {
       </header>
       <div class="crowd crowd-left">${crowd(0)}</div>
       <div class="crowd crowd-right">${crowd(3)}</div>
-      <div class="photog left">${photographer('#e7b48a', '#e56b93')}</div>
-      <div class="photog right">${photographer('#c68642', '#24315c')}</div>
+      <div class="photog left">${photographer('kneel')}</div>
+      <div class="photog right">${photographer('stand')}</div>
+      <img class="sprite runway-flash" alt="" src="${runwayArt('fx-flash')}">
       <div class="catwalk"><div class="lane"></div></div>
       <div class="spot"></div>
       <div class="model-slot"></div>
@@ -1795,17 +1895,24 @@ function runwayScene(): string {
     </section>`;
 }
 
-function photographer(skin: string, shirt: string): string {
-  return `<img class="pixel photog-sprite" alt="" width="96" height="144" src="${photogURL(skin, shirt)}">`;
+function photographer(which: 'stand' | 'kneel'): string {
+  return `<img class="sprite photog-sprite" alt="" src="${runwayArt(which === 'stand' ? 'photographer-stand' : 'photographer-kneel')}">`;
 }
 
 function crowd(shift: number): string {
-  const shirts = ['#e56b93', '#2f6f86', '#f2c14e', '#7a4e8a', '#e07a3d', '#3e8f62', '#24315c'];
-  const hairs = ['#241910', '#c4922a', '#6b2d12', '#1a120e', '#4a3428'];
-  const skins = ['#f6d3ba', '#e7b48a', '#8d5524', '#c68642', '#5c3a2a'];
+  const fans = [
+    'crowd-girl-clap',
+    'crowd-boy-cheer',
+    'crowd-grandma',
+    'crowd-teen-phone',
+    'crowd-kid-lightstick',
+    'crowd-dad-clap',
+    'crowd-girl-hearteyes',
+    'crowd-boy-wave',
+  ];
   return Array.from({ length: 6 }, (_, index) => {
-    const i = index + shift;
-    return `<img class="pixel fan" alt="" style="--i:${index}" width="48" height="64" src="${fanURL(skins[i % skins.length], hairs[i % hairs.length], shirts[i % shirts.length])}">`;
+    const name = fans[(index + shift) % fans.length];
+    return `<img class="sprite fan" alt="" style="--i:${index}" src="${runwayArt(name)}">`;
   }).join('');
 }
 
@@ -1865,7 +1972,13 @@ async function playShow(): Promise<void> {
     const slot = document.querySelector('.model-slot') as HTMLElement | null;
     if (!slot) return;
     const pose: Pose = 'stride';
-    slot.innerHTML = renderPerson({ look: entry.look, outfit: entry.outfit, pose, uid: nextId('run') });
+    slot.innerHTML = renderPerson({
+      look: entry.look,
+      outfit: entry.outfit,
+      pose,
+      uid: nextId('run'),
+      showcase: entry.label !== 'Ella',
+    });
     slot.classList.toggle('finale', entry.finale);
     slot.classList.remove('posing');
     await walk(slot, reduce ? 700 : ella ? 3000 : 2400);
@@ -1957,10 +2070,17 @@ function pause(ms: number): Promise<void> {
 
 function popFlash(): void {
   const el = document.querySelector('.flash');
-  if (!el) return;
-  el.classList.remove('on');
-  void (el as HTMLElement).offsetWidth;
-  el.classList.add('on');
+  const burst = document.querySelector('.runway-flash');
+  if (el) {
+    el.classList.remove('on');
+    void (el as HTMLElement).offsetWidth;
+    el.classList.add('on');
+  }
+  if (burst) {
+    burst.classList.remove('on');
+    void (burst as HTMLElement).offsetWidth;
+    burst.classList.add('on');
+  }
   audio.flash();
 }
 
@@ -2090,27 +2210,15 @@ function galleryScene(): string {
     return `<figure class="look-card static"><div>${renderDressForm(outfit, `gal${index}`)}</div><figcaption>${esc(sketch.name)}</figcaption></figure>`;
   }).join('');
   const people = [...CUSTOMERS, JULES]
-    .map((person, index) => {
-      const outfit: Outfit = {
-        id: `gp-${person.id}`,
-        sketchId: SKETCHES[index % SKETCHES.length].id,
-        pattern: 'solid',
-        color: person.color,
-        accessories: ['shoes'],
-      };
-      return `<div class="gal-person">${renderPerson({ look: person, outfit, pose: 'stand', uid: `gp${index}` })}<span>${esc(person.name)}</span></div>`;
-    })
+    .map(
+      (person, index) =>
+        `<div class="gal-person">${renderPerson({ look: person, pose: 'stand', uid: `gp${index}` })}<span>${esc(person.name)}</span></div>`,
+    )
     .join('');
-  const gowns = RUNWAY_GOWNS.map((id, index) => {
-    const outfit: Outfit = {
-      id: `gown-${id}`,
-      sketchId: id,
-      pattern: patterns[index % patterns.length],
-      color: PALETTE[(index * 2 + 1) % PALETTE.length].hex,
-      accessories: ['bow', 'shoes'],
-    };
-    return `<figure class="look-card static gown-card"><div>${renderPerson({ look: MODELS[index % MODELS.length], outfit, pose: 'stand', uid: `gown${index}` })}</div><figcaption>${esc(sketchById(id).name)}</figcaption></figure>`;
-  }).join('');
+  const gowns = RUNWAY_GOWNS.map(
+    (id) =>
+      `<figure class="look-card static gown-card"><div><img class="sprite sprite-card" alt="" src="${modelSignature(id)}"></div><figcaption>${esc(sketchById(id).name)}</figcaption></figure>`,
+  ).join('');
   return `${hud()}
     <div class="book-page">
       <div class="sketch-top">
@@ -2132,13 +2240,6 @@ function coverScene(): string {
     color: '#E56B93',
     accessories: ['bow', 'shoes'],
   };
-  const twirl: Outfit = {
-    id: 'cover-twirl',
-    sketchId: 'twirl-set',
-    pattern: 'sequins',
-    color: '#7A4E8A',
-    accessories: ['bow', 'shoes'],
-  };
   return `<div class="cover-frame">
     <div class="cover-copy">
       <p>a boutique game</p>
@@ -2146,7 +2247,7 @@ function coverScene(): string {
       <p class="byline">by Ella</p>
     </div>
     <div class="cover-form">${renderDressForm(gown, 'coverform')}</div>
-    <div class="cover-model">${renderPerson({ look: CUSTOMERS[3], outfit: twirl, pose: 'cheer', uid: 'covermodel' })}</div>
+    <div class="cover-model"><img class="sprite sprite-model" alt="" src="${modelSignature('twirl-set')}"></div>
   </div>`;
 }
 

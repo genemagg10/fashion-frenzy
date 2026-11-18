@@ -1,5 +1,5 @@
 import { darken, lighten, mix } from './color';
-import { dressFormURL, sketchURL } from './sprites';
+import { garmentArt, sewForm, tintedSprite } from './spritekit';
 import type { AccessoryId, FabricId, Outfit, SketchId } from './types';
 
 export const FORM_VB = '0 0 400 640';
@@ -994,10 +994,12 @@ export function renderDressForm(
   _uid: string,
   mode: 'fashion' | 'paper' | 'bare' = 'fashion',
 ): string {
-  const href = dressFormURL(outfit, mode);
+  let href = sewForm('empty');
+  if (mode === 'paper') href = sewForm('pattern');
+  else if (outfit?.color) href = tintedSprite('form', outfit.sketchId, outfit.color, outfit.pattern);
   const marks = mode === 'paper' && outfit ? `<g class="paper-marks">${paperDecor(outfit.sketchId)}</g>` : '';
   return `<svg class="dress-svg" viewBox="${FORM_VB}" preserveAspectRatio="xMidYMax meet">
-    <image href="${href}" x="0" y="0" width="400" height="640" preserveAspectRatio="none"/>
+    <image id="form-photo" href="${href}" x="20" y="24" width="360" height="590" preserveAspectRatio="xMidYMax meet"/>
     ${marks}
   </svg>`;
 }
@@ -1086,8 +1088,7 @@ function paperDecor(sketchId: SketchId): string {
 
 export function renderSketchDrawing(sketchId: SketchId, uid: string): string {
   void uid;
-  const href = sketchURL(sketchId);
-  return `<img class="sketch-svg pixel" alt="" src="${href}">`;
+  return `<img class="sketch-svg sprite" alt="" src="${garmentArt(sketchId)}">`;
 }
 
 export function renderShareCard(

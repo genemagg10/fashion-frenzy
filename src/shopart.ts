@@ -1,28 +1,22 @@
+import { customerFull, propArt } from './spritekit';
 import type { DecorId } from './types';
-import { shopURL } from './sprites';
 
 export function shopSvg(opts: {
   decor: DecorId[];
-  customer: string;
-  cat: 'sleep' | 'sit' | 'gone';
-  disco: boolean;
+  customerId: string;
   posterOn: boolean;
 }): string {
-  const bg = shopURL({
-    decor: opts.decor,
-    cat: opts.cat,
-    disco: opts.disco,
-    posterOn: opts.posterOn,
-  });
-  const cat =
-    opts.cat === 'gone'
-      ? ''
-      : `<button class="hotspot hot-cat" type="button" data-act="cat" aria-label="Cat"></button>`;
-  return `<div class="shop-stage ${opts.disco ? 'disco' : ''}">
-    <img class="pixel shop-bg" alt="" src="${bg}">
+  const flowers = opts.decor.includes('flowers');
+  return `<div class="shop-stage illustrated">
+    <img class="prop prop-rack" alt="" src="${propArt('clothes-rack')}">
+    <img class="prop prop-mirror" alt="" src="${propArt('mirror')}">
+    <img class="prop prop-bolts" alt="" src="${propArt('fabric-bolts')}">
+    <img class="prop prop-machine" alt="" src="${propArt('sewing-machine')}">
+    <img class="prop prop-plant" alt="" src="${propArt('plant-monstera')}">
+    <img class="prop prop-flowers" alt="" src="${propArt(flowers ? 'flowers-pot' : 'pincushion-kit')}">
+    <button class="hotspot hot-poster ${opts.posterOn ? 'on' : ''}" type="button" data-act="poster" aria-label="Show poster"></button>
+    <button class="hotspot hot-cat" type="button" data-act="cat" aria-label="The plant"></button>
     <button class="hotspot hot-lamp" type="button" data-act="chandelier" aria-label="Lamp"></button>
-    ${cat}
-    <button class="hotspot hot-poster" type="button" data-act="poster" aria-label="Show poster"></button>
-    <div class="shop-customer">${opts.customer}</div>
+    <img class="sprite shop-customer" alt="" src="${customerFull(opts.customerId)}">
   </div>`;
 }
