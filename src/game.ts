@@ -972,8 +972,9 @@ function studioScene(): string {
           ${session.phase === 'fabric' ? fabricControls(draft) : ''}
           ${session.phase === 'finish' ? finishControls(draft) : ''}
           ${pip(pipLine())}
+          ${session.phase === 'sew' ? `<div class="sew-track" aria-hidden="true"><i></i><i></i><i></i></div><p class="step-label">Follow the marks.</p>` : ''}
         </div>
-        <div class="panel-dock">${dock}</div>
+        <div class="panel-dock">${session.phase === 'sew' ? dock.replace('<p class="step-label">Follow the marks.</p>', '') : dock}</div>
       </section>
     </div>`;
 }
@@ -1132,6 +1133,8 @@ function mountSew(): () => void {
 
   const setLabel = (text: string) => {
     if (label) label.textContent = text;
+    const root = document.querySelector('.studio-sew') as HTMLElement | null;
+    if (root) root.dataset.substep = step;
   };
 
   const redraw = () => {
@@ -1595,7 +1598,9 @@ function reviewsScene(): string {
         </div>
       </div>
       ${pip(pipLine())}
-      ${cards || '<div class="empty"><h2>No reviews yet</h2><p>Sew a look and the wall will fill up.</p></div>'}
+      <div class="review-list">
+        ${cards || '<div class="empty"><h2>No reviews yet</h2><p>Sew a look and the wall will fill up.</p></div>'}
+      </div>
     </div>`;
 }
 
