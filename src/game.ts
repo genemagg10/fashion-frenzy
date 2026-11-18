@@ -1542,6 +1542,13 @@ function setCard(title: string, sub: string): void {
 
 function walk(slot: HTMLElement, duration: number): Promise<void> {
   return new Promise((resolve) => {
+    const stage = slot.offsetParent as HTMLElement | null;
+    const stageH = stage?.clientHeight || window.innerHeight;
+    const header = document.querySelector('.runway-bar') as HTMLElement | null;
+    const namecard = document.querySelector('.namecard') as HTMLElement | null;
+    const clearance = (header?.offsetHeight ?? 64) + 20;
+    const floorGap = (namecard?.offsetHeight ?? 72) + 28;
+    const naturalH = Math.max(1, slot.offsetHeight);
     const start = performance.now();
     let settled = false;
     const finish = () => {
@@ -1553,10 +1560,15 @@ function walk(slot: HTMLElement, duration: number): Promise<void> {
     const frame = (now: number) => {
       if (runway.cancelled) return finish();
       const u = Math.min(1, (now - start) / duration);
-      const bottom = 62 - u * 48;
-      const scale = 0.64 + u * 0.46;
-      const sway = Math.sin(u * Math.PI * 7) * 10;
-      slot.style.bottom = `${bottom}%`;
+      const sway = Math.sin(u * Math.PI * 7) * 8;
+      let bottom = stageH * (0.46 - u * 0.28);
+      let scale = 0.48 + u * 0.42;
+      if (bottom < floorGap) bottom = floorGap;
+      const room = (stageH - bottom - clearance) / naturalH;
+      if (scale > room) scale = Math.max(0.34, room);
+      const top = stageH - bottom - naturalH * scale;
+      if (top < clearance) bottom = Math.max(floorGap, stageH - clearance - naturalH * scale);
+      slot.style.bottom = `${bottom}px`;
       slot.style.transform = `translateX(calc(-50% + ${sway}px)) scale(${scale})`;
       if (u < 1) runway.raf = requestAnimationFrame(frame);
       else finish();
