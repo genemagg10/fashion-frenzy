@@ -36,6 +36,7 @@ export type HairStyle =
   | 'waves'
   | 'puffs'
   | 'braid'
+  | 'pony'
   | 'hijab';
 
 export type Scene =

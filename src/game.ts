@@ -1405,8 +1405,8 @@ function runwayScene(): string {
       </header>
       <div class="crowd crowd-left">${crowd(0)}</div>
       <div class="crowd crowd-right">${crowd(3)}</div>
-      <div class="photog left"></div>
-      <div class="photog right"></div>
+      <div class="photog left">${photographer('#e7b48a', '#e56b93')}</div>
+      <div class="photog right">${photographer('#c68642', '#24315c')}</div>
       <div class="catwalk"><div class="lane"></div></div>
       <div class="spot"></div>
       <div class="model-slot"></div>
@@ -1415,6 +1415,20 @@ function runwayScene(): string {
       <div class="confetti ella-confetti" aria-hidden="true"></div>
       <div class="flash"></div>
     </section>`;
+}
+
+function photographer(skin: string, shirt: string): string {
+  return `<svg viewBox="0 0 90 130" aria-hidden="true">
+    <ellipse cx="45" cy="124" rx="22" ry="5" fill="#000" opacity="0.25"/>
+    <path d="M28 70 h34 v40 h-34 z" fill="${shirt}"/>
+    <circle cx="45" cy="40" r="18" fill="${skin}"/>
+    <circle cx="38" cy="38" r="2" fill="#2a211c"/>
+    <circle cx="52" cy="38" r="2" fill="#2a211c"/>
+    <path d="M40 46 q5 5 10 0" fill="none" stroke="#2a211c" stroke-width="1.4" stroke-linecap="round"/>
+    <rect x="48" y="58" width="28" height="16" rx="3" fill="#1a120e"/>
+    <circle class="lens" cx="70" cy="66" r="6" fill="#8ec6e6" stroke="#f2c14e" stroke-width="2"/>
+    <circle class="flash" cx="58" cy="54" r="4" fill="#fff6d0"/>
+  </svg>`;
 }
 
 function crowd(shift: number): string {

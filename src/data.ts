@@ -248,7 +248,7 @@ export const CUSTOMERS: Customer[] = [
     id: 'amos',
     name: 'Amos',
     skin: '#5C3A2A',
-    hair: 'crop',
+    hair: 'pony',
     hairColor: '#1A120E',
     streetKind: 'separates',
     streetTop: '#f4f1ea',

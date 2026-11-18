@@ -31,6 +31,7 @@ interface Measure {
 interface Piece {
   d: string;
   role: 'back' | 'main' | 'sleeve' | 'skirt';
+  side?: 1 | -1;
   sheer?: boolean;
 }
 
@@ -245,6 +246,25 @@ function wornOf(src: Measure): Measure {
   };
 }
 
+/** Hem heights on the body, so coats stop above the shoes and skirts stay skirts. */
+const WORN_HEM: Partial<Record<SketchId, number>> = {
+  'sunny-dress': 418,
+  'rain-coat': 470,
+  'twirl-set': 388,
+  'hero-cape': 448,
+  'garden-gown': 490,
+  'puff-pencil': 452,
+  palazzo: 468,
+  'crop-jacket': 428,
+  'pleat-parade': 422,
+  jumpsuit: 468,
+};
+
+function fitWorn(id: SketchId, measure: Measure): Measure {
+  const hem = WORN_HEM[id];
+  return hem ? { ...measure, hemY: hem } : measure;
+}
+
 function smoothClosed(pts: Pt[]): string {
   const n = pts.length;
   if (n < 3) return '';
@@ -408,8 +428,8 @@ function piecesFor(id: SketchId, measure: Measure, space: 'form' | 'worn'): Piec
     case 'rain-coat':
       return [
         { d: flared(measure), role: 'main' },
-        { d: longSleeve(measure, 1, sleeve), role: 'sleeve' },
-        { d: longSleeve(measure, -1, sleeve), role: 'sleeve' },
+        { d: longSleeve(measure, 1, sleeve), role: 'sleeve', side: 1 },
+        { d: longSleeve(measure, -1, sleeve), role: 'sleeve', side: -1 },
       ];
     case 'twirl-set':
       return [
@@ -444,8 +464,8 @@ function piecesFor(id: SketchId, measure: Measure, space: 'form' | 'worn'): Piec
     case 'puff-pencil':
       return [
         { d: flared(measure, { cropAt: measure.waistY + (space === 'form' ? 16 : 10) }), role: 'main' },
-        { d: puffSleeve(measure, 1, puff), role: 'sleeve' },
-        { d: puffSleeve(measure, -1, puff), role: 'sleeve' },
+        { d: puffSleeve(measure, 1, puff), role: 'sleeve', side: 1 },
+        { d: puffSleeve(measure, -1, puff), role: 'sleeve', side: -1 },
         { d: pencilSkirt(measure), role: 'skirt' },
       ];
     case 'palazzo':
@@ -458,8 +478,8 @@ function piecesFor(id: SketchId, measure: Measure, space: 'form' | 'worn'): Piec
       return [
         { d: circleSkirt({ ...measure, hemHW: measure.hemHW * 0.92 }), role: 'skirt' },
         { d: flared(measure, { cropAt: measure.waistY + (space === 'form' ? 18 : 12) }), role: 'main' },
-        { d: longSleeve(measure, 1, jacketSleeve), role: 'sleeve' },
-        { d: longSleeve(measure, -1, jacketSleeve), role: 'sleeve' },
+        { d: longSleeve(measure, 1, jacketSleeve), role: 'sleeve', side: 1 },
+        { d: longSleeve(measure, -1, jacketSleeve), role: 'sleeve', side: -1 },
       ];
     case 'pleat-parade':
       return [
@@ -659,13 +679,6 @@ function coatFront(measure: Measure, color: string, cropped: boolean): string {
       <path d="M ${x + 4} ${py + 14} h 34 v 28 q 0 6 -6 6 h -22 q -6 0 -6 -6 v -28 z" fill="${darken(color, 0.12)}" opacity="0.9"/>`;
     pockets = flap(measure.cx - measure.hipHW * 0.72) + flap(measure.cx + 8);
   }
-  const cuffY = measure.shoulderY + (cropped ? 108 : 132);
-  const cuffs = [-1, 1]
-    .map((dir) => {
-      const x = measure.cx + dir * (measure.shoulderHW + 18);
-      return `<rect x="${x - 12}" y="${cuffY}" width="24" height="12" rx="3" fill="${collar}" stroke="${darken(color, 0.35)}" stroke-width="1"/>`;
-    })
-    .join('');
   const beltY = measure.waistY;
   const tie = `<path d="M ${measure.cx - measure.waistHW + 4} ${beltY - 6}
       Q ${measure.cx} ${beltY + 4} ${measure.cx + measure.waistHW - 4} ${beltY - 6}
@@ -676,7 +689,18 @@ function coatFront(measure: Measure, color: string, cropped: boolean): string {
     <path d="${right}" fill="${lapel}" stroke="${darken(color, 0.45)}" stroke-width="1.2"/>
     <path d="${left}" fill="${lapel}" stroke="${darken(color, 0.45)}" stroke-width="1.2"/>
     <path d="M ${measure.cx} ${measure.neckY + 18} L ${measure.cx - 3} ${cropped ? measure.waistY + 10 : measure.hemY - 16}" fill="none" stroke="${darken(color, 0.45)}" stroke-width="2"/>
-    ${pockets}${cuffs}${cropped ? '' : tie}${buttons(measure, color, cropped ? 3 : 5, cropped ? measure.waistY : measure.hipY + 24)}`;
+    ${pockets}${cropped ? '' : tie}${buttons(measure, color, cropped ? 3 : 5, cropped ? measure.waistY : measure.hipY + 24)}`;
+}
+
+function sleeveCuff(measure: Measure, dir: 1 | -1, color: string, cropped: boolean): string {
+  const length = measure.cx > 160 ? (cropped ? 118 : 146) : cropped ? 78 : 96;
+  const sx = measure.cx + dir * (measure.shoulderHW - 6);
+  const sy = measure.shoulderY + 8;
+  const wx = sx + dir * length * 0.34;
+  const wy = sy + length - 2;
+  const w = measure.cx > 160 ? 22 : 14;
+  const h = measure.cx > 160 ? 11 : 8;
+  return `<rect x="${(wx - w / 2).toFixed(1)}" y="${wy.toFixed(1)}" width="${w}" height="${h}" rx="2" fill="${darken(color, 0.2)}" stroke="${darken(color, 0.4)}" stroke-width="1"/>`;
 }
 
 function pleatOverlay(measure: Measure, color: string): string {
@@ -851,8 +875,9 @@ export function renderGarment(
   uid: string,
   space: 'form' | 'worn',
   mode: 'fashion' | 'paper' | 'sketch',
-): { back: string; main: string; sleeves: string; shade: string; extras: string; defs: string } {
-  const measure = space === 'form' ? FORM[outfit.sketchId] : wornOf(FORM[outfit.sketchId]);
+): { back: string; main: string; sleeves: string; sleeveL: string; sleeveR: string; shade: string; extras: string; defs: string } {
+  const raw = space === 'form' ? FORM[outfit.sketchId] : wornOf(FORM[outfit.sketchId]);
+  const measure = space === 'worn' ? fitWorn(outfit.sketchId, raw) : raw;
   const pieces = piecesFor(outfit.sketchId, measure, space);
   const paint = fabricPaint(uid, outfit.pattern, outfit.color);
   const edge = mode === 'sketch' ? '#2a241f' : mode === 'paper' ? '#5c4030' : darken(outfit.color, 0.28);
@@ -868,9 +893,9 @@ export function renderGarment(
     if (outfit.pattern === 'tulle' && piece.role === 'back') return 0.55;
     return 1;
   };
-  const draw = (role: Piece['role']) =>
+  const draw = (role: Piece['role'], side?: 1 | -1) =>
     pieces
-      .filter((p) => p.role === role)
+      .filter((p) => p.role === role && (side === undefined || p.side === side))
       .map((p) => {
         const sw = mode === 'sketch' ? 2.6 : mode === 'paper' ? 2.2 : 1.6;
         const extra =
@@ -922,7 +947,7 @@ export function renderGarment(
   const extras =
     mode === 'fashion'
       ? accessoriesSvg(outfit.accessories, measure, outfit.sketchId, outfit.color, uid, space) +
-        (space === 'worn' ? wornFeet(outfit, measure) : '')
+        (space === 'worn' ? wornFeet(outfit) : '')
       : '';
 
   const sketchMarks =
@@ -934,20 +959,28 @@ export function renderGarment(
           ${outfit.sketchId === 'rain-coat' ? `<rect x="${measure.cx - 70}" y="${measure.hipY}" width="36" height="28" rx="3"/><rect x="${measure.cx + 28}" y="${measure.hipY}" width="36" height="28" rx="3"/>` : ''}
         </g>`
       : '';
+  const cuff = (side: 1 | -1) =>
+    mode === 'fashion' && (outfit.sketchId === 'rain-coat' || outfit.sketchId === 'crop-jacket')
+      ? sleeveCuff(measure, side, outfit.color, outfit.sketchId === 'crop-jacket')
+      : '';
+  const sleeveL = draw('sleeve', -1) + cuff(-1);
+  const sleeveR = draw('sleeve', 1) + cuff(1);
   return {
     defs,
     back: draw('back'),
     main: draw('main') + draw('skirt') + sketchMarks,
-    sleeves: draw('sleeve'),
+    sleeves: sleeveL + sleeveR,
+    sleeveL,
+    sleeveR,
     shade,
     extras,
   };
 }
 
-function wornFeet(outfit: Pick<Outfit, 'accessories' | 'color'>, measure: Measure): string {
+function wornFeet(outfit: Pick<Outfit, 'accessories' | 'color'>): string {
   let s = '';
   if (outfit.accessories.includes('shoes')) {
-    s += shoePair(120, Math.min(measure.hemY + 8, 505), outfit.color, 0.72);
+    s += shoePair(120, 482, outfit.color, 0.66);
   }
   if (outfit.accessories.includes('hat')) {
     s += beret(128, 58, darken(outfit.color, 0.1), 0.72);
