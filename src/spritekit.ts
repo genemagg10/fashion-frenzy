@@ -89,80 +89,100 @@ export function sewForm(step: 'empty' | 'draped' | 'pattern' | 'half' | 'finishe
   return spriteUrl(`sprites/forms/${file}.png`);
 }
 
+function luma(hex: string): number {
+  const n = Number.parseInt(hex.replace('#', ''), 16);
+  if (!Number.isFinite(n)) return 0.5;
+  const r = (n >> 16) & 255;
+  const g = (n >> 8) & 255;
+  const b = n & 255;
+  return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+}
+
 function patternTile(pattern: FabricId, hex: string): HTMLCanvasElement {
   const key = `${pattern}:${hex}`;
   const cached = tiles.get(key);
   if (cached) return cached;
   const c = document.createElement('canvas');
-  c.width = 28;
-  c.height = 28;
+  c.width = 72;
+  c.height = 72;
   const g = c.getContext('2d');
   if (!g) return c;
-  g.clearRect(0, 0, 28, 28);
-  g.globalAlpha = 1;
+  g.clearRect(0, 0, 72, 72);
+  const ink = luma(hex) > 0.62 ? 'rgba(42, 28, 24, 0.82)' : 'rgba(255, 255, 255, 0.92)';
+  const accent = luma(hex) > 0.62 ? '#9a3048' : '#ffe08a';
   if (pattern === 'stripes') {
-    g.fillStyle = 'rgba(255,255,255,.75)';
-    for (let x = 0; x < 28; x += 8) g.fillRect(x, 0, 3, 28);
+    g.fillStyle = ink;
+    for (let x = 0; x < 72; x += 18) g.fillRect(x, 0, 8, 72);
   } else if (pattern === 'polka') {
-    g.fillStyle = 'rgba(255,255,255,.8)';
-    for (let y = 4; y < 28; y += 10) for (let x = 4; x < 28; x += 10) g.beginPath(), g.arc(x, y, 2.2, 0, Math.PI * 2), g.fill();
+    g.fillStyle = ink;
+    for (let y = 10; y < 72; y += 24) for (let x = 10; x < 72; x += 24) {
+      g.beginPath();
+      g.arc(x, y, 6, 0, Math.PI * 2);
+      g.fill();
+    }
   } else if (pattern === 'floral') {
-    g.fillStyle = '#e56b93';
-    for (const [x, y] of [[8, 8], [20, 18]]) {
+    for (const [x, y] of [[20, 22], [50, 46]] as const) {
+      g.fillStyle = accent;
+      g.beginPath();
+      g.arc(x, y, 8, 0, Math.PI * 2);
+      g.fill();
+      g.fillStyle = ink;
       g.beginPath();
       g.arc(x, y, 3, 0, Math.PI * 2);
       g.fill();
+      g.fillStyle = luma(hex) > 0.62 ? '#2f7a45' : '#b6f0c2';
+      g.fillRect(x - 1, y + 6, 3, 8);
     }
-    g.fillStyle = '#3e8f62';
-    g.fillRect(8, 12, 2, 4);
   } else if (pattern === 'denim') {
-    g.strokeStyle = 'rgba(20,40,80,.45)';
-    g.lineWidth = 1;
-    for (let i = -28; i < 56; i += 5) {
+    g.strokeStyle = ink;
+    g.lineWidth = 3;
+    for (let i = -72; i < 144; i += 12) {
       g.beginPath();
       g.moveTo(i, 0);
-      g.lineTo(i + 28, 28);
+      g.lineTo(i + 72, 72);
       g.stroke();
     }
   } else if (pattern === 'sequins') {
-    const star = (sx: number, sy: number) => {
+    const star = (sx: number, sy: number, r: number) => {
       g.beginPath();
-      g.moveTo(sx, sy - 3.2);
-      g.lineTo(sx + 0.8, sy - 0.8);
-      g.lineTo(sx + 3.2, sy);
-      g.lineTo(sx + 0.8, sy + 0.8);
-      g.lineTo(sx, sy + 3.2);
-      g.lineTo(sx - 0.8, sy + 0.8);
-      g.lineTo(sx - 3.2, sy);
-      g.lineTo(sx - 0.8, sy - 0.8);
+      g.moveTo(sx, sy - r);
+      g.lineTo(sx + r * 0.28, sy - r * 0.28);
+      g.lineTo(sx + r, sy);
+      g.lineTo(sx + r * 0.28, sy + r * 0.28);
+      g.lineTo(sx, sy + r);
+      g.lineTo(sx - r * 0.28, sy + r * 0.28);
+      g.lineTo(sx - r, sy);
+      g.lineTo(sx - r * 0.28, sy - r * 0.28);
       g.closePath();
       g.fill();
     };
-    g.fillStyle = 'rgba(255, 236, 160, 0.95)';
-    star(8, 8);
-    star(20, 18);
-    g.fillStyle = 'rgba(255, 255, 255, 0.9)';
-    star(18, 6);
-    star(7, 20);
+    g.fillStyle = '#ffe08a';
+    star(18, 20, 9);
+    star(50, 46, 10);
+    g.fillStyle = '#fff';
+    star(48, 16, 6);
+    star(22, 50, 6);
   } else if (pattern === 'velvet') {
-    g.fillStyle = 'rgba(255,255,255,.28)';
-    g.fillRect(0, 0, 28, 8);
+    g.fillStyle = luma(hex) > 0.62 ? 'rgba(42, 28, 24, 0.28)' : 'rgba(255,255,255,0.45)';
+    g.fillRect(0, 0, 72, 26);
+    g.fillStyle = ink;
+    g.fillRect(0, 34, 72, 6);
   } else if (pattern === 'tulle') {
-    g.strokeStyle = 'rgba(255,255,255,.55)';
-    for (let y = 2; y < 28; y += 4) {
+    g.strokeStyle = ink;
+    g.lineWidth = 3;
+    for (let y = 6; y < 72; y += 12) {
       g.beginPath();
       g.moveTo(0, y);
-      g.lineTo(28, y);
+      g.quadraticCurveTo(36, y - 8, 72, y);
       g.stroke();
     }
   } else if (pattern === 'rainbow') {
-    const hues = ['#ff8fab', '#ffd166', '#80ed99', '#4cc9f0', '#c9a6e0'];
+    const hues = ['#ff5d8f', '#ffb703', '#5ecf7a', '#3aa0e0', '#b388ff'];
     hues.forEach((h, i) => {
       g.fillStyle = h;
-      g.fillRect(i * 6, 0, 6, 28);
+      g.fillRect(i * 15, 0, 15, 72);
     });
   }
-  void hex;
   tiles.set(key, c);
   return c;
 }
@@ -190,7 +210,7 @@ export function tintedSprite(kind: 'model' | 'form' | 'garment', id: string, hex
   x.fillRect(0, 0, c.width, c.height);
   if (pattern && pattern !== 'solid') {
     x.globalCompositeOperation = 'source-atop';
-    x.globalAlpha = pattern === 'sequins' || pattern === 'rainbow' ? 0.82 : 0.42;
+    x.globalAlpha = pattern === 'sequins' || pattern === 'rainbow' ? 0.92 : 0.78;
     const tile = patternTile(pattern, color);
     const pat = x.createPattern(tile, 'repeat');
     if (pat) {
@@ -216,13 +236,23 @@ export function tintedSprite(kind: 'model' | 'form' | 'garment', id: string, hex
 
 export function swatchURL(pattern: FabricId, hex: string): string {
   const c = document.createElement('canvas');
-  c.width = 32;
-  c.height = 32;
+  c.width = 180;
+  c.height = 120;
   const g = c.getContext('2d');
   if (!g) return '';
-  g.fillStyle = hex;
-  g.fillRect(0, 0, 32, 32);
-  if (pattern !== 'solid') g.drawImage(patternTile(pattern, hex), 2, 2);
+  g.imageSmoothingEnabled = true;
+  g.fillStyle = hex || '#f4e4d4';
+  g.fillRect(0, 0, 180, 120);
+  if (pattern !== 'solid') {
+    const pat = g.createPattern(patternTile(pattern, hex || '#f4e4d4'), 'repeat');
+    if (pat) {
+      g.fillStyle = pat;
+      g.fillRect(0, 0, 180, 120);
+    }
+  }
+  g.strokeStyle = luma(hex || '#f4e4d4') > 0.8 ? '#6b4332' : 'rgba(255,255,255,0.85)';
+  g.lineWidth = 8;
+  g.strokeRect(4, 4, 172, 112);
   return c.toDataURL('image/png');
 }
 

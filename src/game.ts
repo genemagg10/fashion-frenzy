@@ -78,6 +78,7 @@ interface RunHandle {
   cancelled: boolean;
   raf: number;
   skip: (() => void) | null;
+  progress: number;
 }
 
 const session: {
@@ -136,7 +137,7 @@ let cleanup: () => void = () => {};
 let seq = 1;
 let lastCustomerId = '';
 let toastTimer = 0;
-const runway: RunHandle = { cancelled: false, raf: 0, skip: null };
+const runway: RunHandle = { cancelled: false, raf: 0, skip: null, progress: 0 };
 let sewApi: { pin: (index: number) => void; snip: (index: number) => void } | null = null;
 
 const MODELS: PersonLook[] = [
@@ -732,13 +733,17 @@ function shopScene(): string {
     <div class="split">
       <div class="art shop-art">${art}</div>
       <section class="panel">
-        <p class="eyebrow">${esc(customer.name)} · ${esc(reputationLabel())}</p>
-        <h1 class="request">${icon(customer.icon, 'icon bubble-icon')}<span>${esc(customer.request)}</span></h1>
-        ${moodBoard(show && session.pendingTheme ? [{ kind: 'swatch', hex: session.pendingTheme.colors[0] }, { kind: 'icon', name: session.pendingTheme.icon }, { kind: 'swatch', hex: session.pendingTheme.colors[1] ?? session.pendingTheme.colors[0] }] : customer.board)}
-        <p class="hint">${esc(customer.hint)}</p>
-        ${pip(pipLine())}
-        <button class="btn" type="button" data-act="${show ? 'start-show' : 'design'}">${show ? 'Design the looks' : 'Design an outfit'}</button>
-        ${show ? '<button class="btn ghost" type="button" data-act="decline-show">Maybe later</button>' : '<button class="btn ghost" type="button" data-act="reviews">Guestbook</button>'}
+        <div class="panel-scroll">
+          <p class="eyebrow">${esc(customer.name)} · ${esc(reputationLabel())}</p>
+          <h1 class="request">${icon(customer.icon, 'icon bubble-icon')}<span>${esc(customer.request)}</span></h1>
+          ${moodBoard(show && session.pendingTheme ? [{ kind: 'swatch', hex: session.pendingTheme.colors[0] }, { kind: 'icon', name: session.pendingTheme.icon }, { kind: 'swatch', hex: session.pendingTheme.colors[1] ?? session.pendingTheme.colors[0] }] : customer.board)}
+          <p class="hint">${esc(customer.hint)}</p>
+          ${pip(pipLine())}
+        </div>
+        <div class="panel-dock">
+          <button class="btn" type="button" data-act="${show ? 'start-show' : 'design'}">${show ? 'Design the looks' : 'Design an outfit'}</button>
+          ${show ? '<button class="btn secondary" type="button" data-act="decline-show">Maybe later</button>' : '<button class="btn secondary" type="button" data-act="reviews">Guestbook</button>'}
+        </div>
       </section>
     </div>`;
 }
@@ -808,14 +813,16 @@ function sketchScene(): string {
           ${renderSketchDrawing(sketch.id, nextId('sk'))}
         </div>
       </div>
-      <div class="sketch-nav">
-        <button class="icon-btn big" type="button" data-act="sketch-prev" aria-label="Previous sketch">${icon('back')}</button>
-        <div class="dots">${list.map((item, dot) => `<i class="${dot === index ? 'on' : ''}" title="${esc(item.name)}"></i>`).join('')}</div>
-        <button class="icon-btn big flip" type="button" data-act="sketch-next" aria-label="Next sketch">${icon('back')}</button>
+      <div class="sketch-controls">
+        <div class="sketch-nav">
+          <button class="icon-btn big" type="button" data-act="sketch-prev" aria-label="Previous sketch">${icon('back')}</button>
+          <div class="dots">${list.map((item, dot) => `<i class="${dot === index ? 'on' : ''}" title="${esc(item.name)}"></i>`).join('')}</div>
+          <button class="icon-btn big flip" type="button" data-act="sketch-next" aria-label="Next sketch">${icon('back')}</button>
+        </div>
+        ${pip(pipLine())}
+        <button class="btn" type="button" data-act="sketch-pick">Sew this sketch</button>
+        ${show ? '<button class="btn secondary" type="button" data-act="leave-show">Leave the show</button>' : ''}
       </div>
-      ${pip(pipLine())}
-      <button class="btn" type="button" data-act="sketch-pick">Sew this sketch</button>
-      ${show ? '<button class="btn ghost" type="button" data-act="leave-show">Leave the show</button>' : ''}
     </div>`;
 }
 
@@ -975,13 +982,13 @@ function fabricControls(draft: Draft): string {
   const owned = FABRICS.filter((fabric) => save.fabrics.includes(fabric.id));
   const cloth = draft.color || '#f4e4d4';
   return `<p class="color-name">${draft.color ? esc(colorName(draft.color)) : 'Choose a color'}</p>
-    <div class="colors">${PALETTE.map((swatch) => `<button type="button" class="dot ${draft.color === swatch.hex ? 'on' : ''}" data-act="color" data-id="${swatch.hex}" aria-label="${esc(swatch.name)}" style="background:${swatch.hex}"></button>`).join('')}</div>
-    <div class="patterns">${owned
+    <div class="patterns" aria-label="Cloth">${owned
       .map((fabric) => `<button type="button" class="pat ${draft.pattern === fabric.id ? 'on' : ''}" data-act="pattern" data-id="${fabric.id}" style="--c:${cloth}">
-          <i class="pat-swatch pixel" style="background-image:url(${swatchURL(fabric.id, cloth)})"></i><span>${esc(fabric.name)}</span>
+          <i class="pat-swatch" style="background-image:url(${swatchURL(fabric.id, cloth)})"></i><span>${esc(fabric.name)}</span>
         </button>`)
       .join('')}</div>
-    <button class="btn ghost" type="button" data-act="shelf">More cloth is on the shelf</button>`;
+    <div class="colors">${PALETTE.map((swatch) => `<button type="button" class="dot ${draft.color === swatch.hex ? 'on' : ''}" data-act="color" data-id="${swatch.hex}" aria-label="${esc(swatch.name)}" style="background:${swatch.hex}"></button>`).join('')}</div>
+    <button class="btn secondary" type="button" data-act="shelf">More cloth is on the shelf</button>`;
 }
 
 function finishControls(draft: Draft): string {
@@ -1355,6 +1362,9 @@ function mountSew(): () => void {
   requestAnimationFrame(refreshPads);
   const onResize = () => refreshPads();
   window.addEventListener('resize', onResize);
+  window.addEventListener('orientationchange', onResize);
+  const stageObserver = new ResizeObserver(() => refreshPads());
+  if (host) stageObserver.observe(host);
   sewApi = { pin: placePin, snip: placeSnip };
 
   const assist = window.setTimeout(() => {
@@ -1375,6 +1385,8 @@ function mountSew(): () => void {
     window.removeEventListener('pointerup', up);
     window.removeEventListener('touchend', up);
     window.removeEventListener('resize', onResize);
+    window.removeEventListener('orientationchange', onResize);
+    stageObserver.disconnect();
   };
 }
 
@@ -1541,7 +1553,7 @@ function reactionScene(): string {
         </div>
         <ul class="receipt">
           <li><span>Color</span><b>${score.starsFor.color}/5</b></li>
-          <li><span>Cloth</span><b>${score.starsFor.cloth}/5</b></li>
+          <li class="cloth-row"><span>Cloth</span><b class="cloth-score"><img class="receipt-swatch" alt="" src="${swatchURL(outfit.pattern, outfit.color)}"><span>${esc(fabricById(outfit.pattern).name)}</span><span>${score.starsFor.cloth}/5</span></b></li>
           <li><span>Shape</span><b>${score.starsFor.shape}/5</b></li>
           <li><span>Stitch</span><b>${score.starsFor.sew}/5</b></li>
           <li><span>Base</span><b>${score.basePay}</b></li>
@@ -1931,11 +1943,22 @@ function mountRunway(): () => void {
   runway.cancelled = false;
   runway.raf = 0;
   runway.skip = null;
+  runway.progress = 0;
+  const onResize = () => {
+    const slot = document.querySelector('.model-slot') as HTMLElement | null;
+    if (slot) fitRunwaySlot(slot, runway.progress || 1);
+  };
+  window.addEventListener('resize', onResize);
+  const stage = document.querySelector('.runway');
+  const observer = new ResizeObserver(onResize);
+  if (stage) observer.observe(stage);
   void playShow();
   return () => {
     runway.cancelled = true;
     runway.skip?.();
     cancelAnimationFrame(runway.raf);
+    window.removeEventListener('resize', onResize);
+    observer.disconnect();
   };
 }
 
@@ -2032,15 +2055,29 @@ function setCard(title: string, sub: string): void {
   card.classList.add('pop');
 }
 
+function fitRunwaySlot(slot: HTMLElement, progress: number): void {
+  const stage = slot.offsetParent as HTMLElement | null;
+  const stageH = stage?.clientHeight || window.innerHeight;
+  const header = document.querySelector('.runway-bar') as HTMLElement | null;
+  const namecard = document.querySelector('.namecard') as HTMLElement | null;
+  const clearance = (header?.offsetHeight ?? 64) + 16;
+  const floorGap = (namecard?.offsetHeight ?? 72) + 16;
+  const naturalH = Math.max(1, slot.offsetHeight);
+  const u = Math.min(1, Math.max(0, progress));
+  const sway = Math.sin(u * Math.PI * 7) * 8;
+  let bottom = stageH * (0.42 - u * 0.22);
+  let scale = 0.55 + u * 0.5;
+  if (bottom < floorGap) bottom = floorGap;
+  const room = (stageH - bottom - clearance) / naturalH;
+  if (scale > room) scale = Math.max(0.28, room);
+  const top = stageH - bottom - naturalH * scale;
+  if (top < clearance) bottom = Math.max(floorGap, stageH - clearance - naturalH * scale);
+  slot.style.bottom = `${bottom}px`;
+  slot.style.transform = `translateX(calc(-50% + ${sway}px)) scale(${scale})`;
+}
+
 function walk(slot: HTMLElement, duration: number): Promise<void> {
   return new Promise((resolve) => {
-    const stage = slot.offsetParent as HTMLElement | null;
-    const stageH = stage?.clientHeight || window.innerHeight;
-    const header = document.querySelector('.runway-bar') as HTMLElement | null;
-    const namecard = document.querySelector('.namecard') as HTMLElement | null;
-    const clearance = (header?.offsetHeight ?? 64) + 28;
-    const floorGap = (namecard?.offsetHeight ?? 72) + 28;
-    const naturalH = Math.max(1, slot.offsetHeight);
     const start = performance.now();
     let settled = false;
     const finish = () => {
@@ -2052,16 +2089,8 @@ function walk(slot: HTMLElement, duration: number): Promise<void> {
     const frame = (now: number) => {
       if (runway.cancelled) return finish();
       const u = Math.min(1, (now - start) / duration);
-      const sway = Math.sin(u * Math.PI * 7) * 8;
-      let bottom = stageH * (0.46 - u * 0.28);
-      let scale = 0.64 + u * 0.56;
-      if (bottom < floorGap) bottom = floorGap;
-      const room = (stageH - bottom - clearance) / naturalH;
-      if (scale > room) scale = Math.max(0.34, room);
-      const top = stageH - bottom - naturalH * scale;
-      if (top < clearance) bottom = Math.max(floorGap, stageH - clearance - naturalH * scale);
-      slot.style.bottom = `${bottom}px`;
-      slot.style.transform = `translateX(calc(-50% + ${sway}px)) scale(${scale})`;
+      runway.progress = u;
+      fitRunwaySlot(slot, u);
       if (u < 1) runway.raf = requestAnimationFrame(frame);
       else finish();
     };
