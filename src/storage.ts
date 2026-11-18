@@ -4,6 +4,8 @@ import type {
   DecorId,
   FabricId,
   Outfit,
+  PersonLook,
+  Review,
   SaveData,
   SketchId,
 } from './types';
@@ -26,6 +28,8 @@ function empty(): SaveData {
     decor: [],
     lookbook: [],
     rainbow: false,
+    sewCounts: {},
+    reviews: [],
   };
 }
 
@@ -51,6 +55,18 @@ const SKETCH_IDS = new Set<string>([
   'crop-jacket',
   'pleat-parade',
   'jumpsuit',
+  'ball-gown',
+  'princess-gown',
+  'mermaid-gown',
+  'sunset-chiffon',
+  'garden-roses',
+  'starry-gown',
+  'butterfly-cape',
+  'tiered-ruffle',
+  'ice-crystal',
+  'candy-party',
+  'peacock-train',
+  'cherry-kimono',
 ]);
 const ACC_IDS = new Set<string>(['bow', 'buttons', 'sequins', 'belt', 'hat', 'bag', 'shoes']);
 const DECOR_IDS = new Set<string>(['rug', 'flowers', 'lights', 'chandelier', 'mirror']);
@@ -87,6 +103,30 @@ function asOutfit(value: unknown): Outfit | null {
   return outfit;
 }
 
+function asReview(value: unknown): Review | null {
+  if (!value || typeof value !== 'object') return null;
+  const row = value as Record<string, unknown>;
+  const look = row.look as PersonLook | undefined;
+  if (typeof row.id !== 'string' || typeof row.name !== 'string' || typeof row.quote !== 'string') return null;
+  if (!look || typeof look.skin !== 'string' || typeof look.hair !== 'string' || typeof look.hairColor !== 'string') return null;
+  return {
+    id: row.id,
+    name: row.name.slice(0, 40),
+    stars: clampNum(row.stars, 1, 5),
+    quote: row.quote.slice(0, 180),
+    coins: clampNum(row.coins, 0, 999),
+    look: {
+      skin: look.skin,
+      hair: look.hair,
+      hairColor: look.hairColor,
+      glasses: Boolean(look.glasses),
+      freckles: Boolean(look.freckles),
+      beret: Boolean(look.beret),
+      blush: typeof look.blush === 'string' ? look.blush : undefined,
+    },
+  };
+}
+
 export function loadSave(): SaveData {
   try {
     const raw = localStorage.getItem(KEY);
@@ -104,6 +144,21 @@ export function loadSave(): SaveData {
     base.rainbow = Boolean(parsed.rainbow);
     base.tapeFound = Boolean(parsed.tapeFound);
     if (typeof parsed.lastTheme === 'string') base.lastTheme = parsed.lastTheme;
+    if (parsed.sewCounts && typeof parsed.sewCounts === 'object') {
+      const counts: NonNullable<SaveData['sewCounts']> = {};
+      for (const [key, value] of Object.entries(parsed.sewCounts)) {
+        if ((key === 'seam' || key === 'pleat' || key === 'buttons' || key === 'zipper' || key === 'hem') && typeof value === 'number') {
+          counts[key] = clampNum(value, 0, 99);
+        }
+      }
+      base.sewCounts = counts;
+    }
+    if (Array.isArray(parsed.reviews)) {
+      base.reviews = parsed.reviews
+        .map(asReview)
+        .filter((review): review is Review => Boolean(review))
+        .slice(0, 24);
+    }
     const fabrics = asList<FabricId>(parsed.fabrics, FABRIC_IDS);
     const sketches = asList<SketchId>(parsed.sketches, SKETCH_IDS);
     const accessories = asList<AccessoryId>(parsed.accessories, ACC_IDS);

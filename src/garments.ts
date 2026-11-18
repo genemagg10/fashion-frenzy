@@ -1,4 +1,5 @@
 import { darken, lighten, mix } from './color';
+import { dressFormURL, sketchURL } from './sprites';
 import type { AccessoryId, FabricId, Outfit, SketchId } from './types';
 
 export const FORM_VB = '0 0 400 640';
@@ -35,7 +36,7 @@ interface Piece {
   sheer?: boolean;
 }
 
-const FORM: Record<SketchId, Measure> = {
+const FORM: Record<string, Measure> = {
   'sunny-dress': m({
     neckY: 150,
     neckHW: 24,
@@ -990,64 +991,33 @@ function wornFeet(outfit: Pick<Outfit, 'accessories' | 'color'>): string {
 
 export function renderDressForm(
   outfit: Pick<Outfit, 'sketchId' | 'pattern' | 'color' | 'accessories'> | null,
-  uid: string,
+  _uid: string,
   mode: 'fashion' | 'paper' | 'bare' = 'fashion',
 ): string {
-  const form = `<g class="form-wood">
-      <ellipse cx="200" cy="612" rx="62" ry="14" fill="#6a3b28"/>
-      <ellipse cx="200" cy="606" rx="62" ry="12" fill="#8d5340"/>
-      <ellipse cx="200" cy="602" rx="40" ry="6" fill="#c4896a" opacity="0.4"/>
-      <rect x="194" y="430" width="12" height="176" rx="4" fill="#d9d3cc"/>
-      <rect x="194" y="430" width="5" height="176" fill="#fff" opacity="0.35"/>
-    </g>
-    <path d="${formBodyPath()}" fill="#f3e2d2" stroke="#e4cdb8" stroke-width="2"/>
-    <path d="M 200 118 C 214 118, 222 130, 222 142 L 214 156 L 186 156 L 178 142 C 178 130, 186 118, 200 118 Z" fill="#ead6c4" stroke="#e0cbb6" stroke-width="1.5"/>
-    <path d="M 176 168 Q 200 180 224 168" fill="none" stroke="#e0c6b0" stroke-width="1.5"/>
-    <path d="M 168 230 Q 200 240 232 230" fill="none" stroke="#e0c6b0" stroke-width="1.2"/>
-    <path d="M 178 300 Q 200 312 222 300" fill="none" stroke="#e0c6b0" stroke-width="1.2"/>`;
-
-  if (!outfit || mode === 'bare') {
-    return `<svg class="dress-svg" viewBox="${FORM_VB}" preserveAspectRatio="xMidYMax meet">${form}</svg>`;
-  }
-  const g = renderGarment(outfit, uid, 'form', mode === 'paper' ? 'paper' : 'fashion');
-  const paperMarks =
-    mode === 'paper'
-      ? `<g class="paper-marks">${paperDecor(outfit.sketchId)}</g>`
-      : '';
+  const href = dressFormURL(outfit, mode);
+  const marks = mode === 'paper' && outfit ? `<g class="paper-marks">${paperDecor(outfit.sketchId)}</g>` : '';
   return `<svg class="dress-svg" viewBox="${FORM_VB}" preserveAspectRatio="xMidYMax meet">
-    <defs>${g.defs}</defs>
-    <ellipse cx="200" cy="600" rx="90" ry="16" fill="#000" opacity="0.06"/>
-    ${form}
-    <g class="garment ${mode}">${g.back}${g.main}${g.sleeves}${g.shade}${paperMarks}${g.extras}</g>
+    <image href="${href}" x="0" y="0" width="400" height="640" preserveAspectRatio="none"/>
+    ${marks}
   </svg>`;
 }
 
-function formBodyPath(): string {
-  return smoothClosed([
-    { x: 200, y: 126 },
-    { x: 224, y: 140 },
-    { x: 268, y: 168 },
-    { x: 258, y: 196 },
-    { x: 276, y: 230 },
-    { x: 250, y: 268 },
-    { x: 228, y: 300 },
-    { x: 262, y: 360 },
-    { x: 236, y: 412 },
-    { x: 214, y: 430 },
-    { x: 186, y: 430 },
-    { x: 164, y: 412 },
-    { x: 138, y: 360 },
-    { x: 172, y: 300 },
-    { x: 150, y: 268 },
-    { x: 124, y: 230 },
-    { x: 142, y: 196 },
-    { x: 132, y: 168 },
-    { x: 176, y: 140 },
-  ]);
+function runwayMeasure(id: SketchId): Measure {
+  const base = FORM['garden-gown'];
+  if (id === 'mermaid-gown') return { ...base, hemHW: 78, hipHW: 96, waistHW: 40, hemY: 560 };
+  if (id === 'cherry-kimono') return { ...base, hemHW: 140, shoulderHW: 100, hemY: 540 };
+  if (id === 'peacock-train') return { ...base, hemHW: 190, hemY: 580 };
+  if (id === 'candy-party') return { ...base, hemY: 460, hemHW: 120 };
+  if (id === 'puff-pencil') return FORM['puff-pencil'];
+  return { ...base, hemHW: 168 };
+}
+
+function measureOf(id: SketchId): Measure {
+  return FORM[id] ?? runwayMeasure(id);
 }
 
 export function stitchLayout(sketchId: SketchId): { pins: Pt[]; stitch: Pt[]; snips: Pt[] } {
-  const measure = FORM[sketchId];
+  const measure = measureOf(sketchId);
   const pins: Pt[] = [
     { x: measure.cx - measure.shoulderHW + 8, y: measure.shoulderY + 6 },
     { x: measure.cx + measure.shoulderHW - 8, y: measure.shoulderY + 6 },
@@ -1115,24 +1085,9 @@ function paperDecor(sketchId: SketchId): string {
 }
 
 export function renderSketchDrawing(sketchId: SketchId, uid: string): string {
-  const outfit = {
-    sketchId,
-    pattern: 'solid' as const,
-    color: '#2a241f',
-    accessories: [] as AccessoryId[],
-  };
-  const g = renderGarment(outfit, uid, 'form', 'sketch');
-  const croquis = `<g class="croquis" fill="none" stroke="#c9b8a4" stroke-width="2" stroke-linecap="round">
-      <circle cx="200" cy="108" r="30"/>
-      <path d="M200 138 L200 300"/>
-      <path d="M132 176 L268 176"/>
-      <path d="M200 300 L150 460 M200 300 L250 460"/>
-      <path d="M150 210 L118 300 M250 210 L282 300"/>
-    </g>`;
-  return `<svg class="sketch-svg" viewBox="${FORM_VB}" preserveAspectRatio="xMidYMid meet">
-    ${croquis}
-    <g class="sketch-lines">${g.back}${g.main}${g.sleeves}</g>
-  </svg>`;
+  void uid;
+  const href = sketchURL(sketchId);
+  return `<img class="sketch-svg pixel" alt="" src="${href}">`;
 }
 
 export function renderShareCard(

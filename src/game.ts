@@ -2,22 +2,26 @@ import { audio } from './audio';
 import { renderPerson, type Pose } from './characters';
 import {
   ACCESSORIES,
-  closestPalette,
+  briefFor,
   colorName,
   CUSTOMERS,
   DECOR,
   FABRICS,
   fabricById,
+  grantRoundRewards,
   JULES,
   PALETTE,
+  RUNWAY_GOWNS,
   sketchById,
   SKETCHES,
   THEMES,
 } from './data';
-import { renderDressForm, renderSketchDrawing, renderShareCard, stitchLayout } from './garments';
+import { renderDressForm, renderSketchDrawing } from './garments';
 import { icon } from './icons';
-import { judge, type Draft } from './score';
+import { grade, liveGrade, wishFromTheme, type Draft, type Grade } from './score';
+import { sewKind, sewPlan, type SewKind } from './sew';
 import { shopSvg } from './shopart';
+import { decorURL, dressFormURL, fanURL, photogURL, pipURL, puppyURL, swatchURL, trimURL, sketchURL } from './sprites';
 import { loadSave, writeSave } from './storage';
 import type {
   AccessoryId,
@@ -76,13 +80,15 @@ const session: {
   catTaps: number;
   lampTaps: number;
   disco: boolean;
-  lastScore: ReturnType<typeof judge> | null;
+  lastScore: Grade | null;
   lastOutfit: Outfit | null;
   viewing: string | null;
   hudBump: boolean;
   parade: boolean;
   titleColor: string;
   leaveArmed: boolean;
+  event: 'vip' | 'rush' | 'delivery' | null;
+  bonus: number;
 } = {
   scene: 'title',
   customer: null,
@@ -106,6 +112,8 @@ const session: {
   parade: false,
   titleColor: '#E56B93',
   leaveArmed: false,
+  event: null,
+  bonus: 0,
 };
 
 let cleanup: () => void = () => {};
@@ -209,6 +217,8 @@ function sceneHtml(): string {
       return shelfScene();
     case 'gallery':
       return galleryScene();
+    case 'reviews':
+      return reviewsScene();
     case 'cover':
       return coverScene();
     default:
@@ -248,10 +258,13 @@ function prepareShop(): void {
   session.parade = false;
   session.leaveArmed = false;
   if (!save.tutorialDone) {
-    session.customer = CUSTOMERS[0];
+    session.customer = { ...CUSTOMERS[0] };
+    session.event = null;
+    session.bonus = 0;
     return;
   }
-  if (save.customersServed >= 2 && !session.showOffered && !session.declinedShow) {
+  const showAfter = reputation() >= 4 ? 2 : 3;
+  if (save.customersServed >= showAfter && !session.showOffered && !session.declinedShow) {
     session.showOffered = true;
     const theme = pickTheme();
     session.pendingTheme = theme;
@@ -263,9 +276,41 @@ function prepareShop(): void {
       color: theme.colors[0],
       colorName: theme.name,
     };
+    session.event = null;
     return;
   }
-  session.customer = randomCustomer();
+  session.customer = { ...randomCustomer() };
+  if (session.customer) applyBrief(session.customer);
+  rollEvent();
+}
+
+function rollEvent(): void {
+  session.bonus = 0;
+  const roll = Math.random();
+  if (roll < 0.22) {
+    session.event = 'vip';
+    session.bonus = 16;
+    if (session.customer) session.customer.request = `VIP visit! ${session.customer.request}`;
+    return;
+  }
+  if (roll < 0.44) {
+    session.event = 'rush';
+    session.bonus = 1;
+    if (session.customer) session.customer.hint = `Rush order. ${session.customer.hint}`;
+    return;
+  }
+  if (roll < 0.66) {
+    session.event = 'delivery';
+    const queue = ['floral', 'denim', 'tulle', 'velvet'] as const;
+    const next = queue.find((id) => !save.fabrics.includes(id));
+    if (next) {
+      save.fabrics.push(next);
+      persist();
+      toast(`A parcel arrived: ${fabricById(next).name}!`);
+    } else toast('A parcel of cloth arrived, just because.');
+    return;
+  }
+  session.event = null;
 }
 
 function chooseCat(): 'sleep' | 'sit' | 'gone' {
@@ -276,7 +321,9 @@ function chooseCat(): 'sleep' | 'sit' | 'gone' {
 }
 
 function randomCustomer(): Customer {
-  const pool = CUSTOMERS.filter((c) => c.id !== lastCustomerId);
+  const fancy = reputation() >= 4 ? CUSTOMERS.filter((c) => c.fancy) : [];
+  const source = fancy.length && Math.random() < 0.7 ? fancy : CUSTOMERS;
+  const pool = source.filter((c) => c.id !== lastCustomerId);
   const pick = pool[Math.floor(Math.random() * pool.length)] ?? CUSTOMERS[0];
   lastCustomerId = pick.id;
   return pick;
@@ -320,11 +367,14 @@ function onClick(event: MouseEvent): void {
     case 'start-show':
       startShow(session.pendingTheme ?? pickTheme());
       break;
-    case 'decline-show':
+    case 'decline-show': {
       session.declinedShow = true;
-      session.customer = randomCustomer();
+      session.customer = { ...randomCustomer() };
+      if (session.customer) applyBrief(session.customer);
+      rollEvent();
       draw();
       break;
+    }
     case 'poster':
       onPoster();
       break;
@@ -363,11 +413,21 @@ function onClick(event: MouseEvent): void {
       }
       break;
     case 'to-sew':
+      if (!session.draft?.color || !session.draft.pattern) {
+        toast('Pick a color and a cloth first.');
+        break;
+      }
       session.phase = 'sew';
       draw();
       break;
+    case 'reviews':
+      goto('reviews');
+      break;
     case 'help-sew':
       helpSew();
+      break;
+    case 'auto-sew':
+      helpSew(true);
       break;
     case 'accessory':
       toggleAccessory(id);
@@ -470,43 +530,61 @@ function affordable(): boolean {
 function pip(line: string): string {
   if (!line) return '';
   return `<div class="pip">
-    <svg class="pip-svg" viewBox="0 0 64 64" aria-hidden="true">
-      <ellipse cx="32" cy="40" rx="18" ry="15" fill="#e25b4a"/>
-      <path d="M22 30c4-12 18-12 22 0" fill="#3e8f62"/>
-      <circle cx="26" cy="40" r="2" fill="#2a211c"/>
-      <circle cx="38" cy="40" r="2" fill="#2a211c"/>
-      <path d="M28 46q4 4 8 0" fill="none" stroke="#2a211c" stroke-width="1.6" stroke-linecap="round"/>
-      <circle cx="32" cy="16" r="4" fill="#f2c14e"/>
-      <path d="M32 20 v8" stroke="#e2c27a" stroke-width="2"/>
-    </svg>
+    <img class="pixel pip-svg" alt="" width="64" height="64" src="${pipURL()}">
     <p>${esc(line)}</p>
   </div>`;
 }
 
 function pipLine(): string {
   const name = session.customer?.name ?? 'Your customer';
+  const round = save.customersServed;
+  if (session.event === 'vip' && session.scene === 'shop') return `${name} is a VIP today. Extra coins if you sew with care.`;
+  if (session.event === 'rush' && session.scene === 'shop') return 'Rush order! There is still no wrong answer.';
+  if (session.event === 'delivery' && session.scene === 'shop') return 'A new cloth just landed on the shelf.';
   if (!save.tutorialDone) {
     if (session.scene === 'shop') return `${name} is here. Read the wish, then tap the pink button.`;
     if (session.scene === 'sketch') return 'Flip the pages, then tap Sew this sketch.';
     if (session.scene === 'studio' && session.phase === 'fabric') return 'Try pink and sequins — or choose your own.';
-    if (session.scene === 'studio' && session.phase === 'sew') return 'Tap the pins, drag the pink thread, then snip.';
+    if (session.scene === 'studio' && session.phase === 'sew') return 'Tap the pins, follow each dot, then snip the threads.';
     if (session.scene === 'studio' && session.phase === 'finish') return 'A bow is lovely. Nothing extra is lovely too.';
     if (session.scene === 'reaction') return 'You did it. This look is yours.';
   }
+  const fresh = [
+    'Every customer wants something a little different.',
+    'New pages are hiding in the sketchbook as you sew.',
+    'A coat, a gown, a cape — they are all good answers.',
+    'If a stitch feels long, I can help. The trims are still yours.',
+    'Look at their hint. It is a friend, not a test.',
+  ];
   if (session.scene === 'shop' && session.customer?.show && session.pendingTheme) {
     return `${session.pendingTheme.name}: ${session.pendingTheme.blurb}`;
   }
-  if (session.scene === 'shop') return `${name} can’t wait to see what you make.`;
+  if (session.scene === 'shop') return fresh[round % fresh.length];
   if (session.scene === 'sketch' && session.mode === 'show' && session.show) {
     return `Look ${session.show.looks.length + 1} of 3. ${session.show.theme.chips.join(' · ')}`;
   }
-  if (session.scene === 'sketch') return 'Pick a shape that fits the wish.';
-  if (session.scene === 'studio' && session.phase === 'fabric') return 'Color first. Then a pattern.';
-  if (session.scene === 'studio' && session.phase === 'sew') return 'Pins, pink thread, then a little snip.';
-  if (session.scene === 'studio' && session.phase === 'finish') return 'Add only what you like.';
+  if (session.scene === 'sketch') return round % 2 === 0 ? 'A new page might be waiting at the end of the book.' : 'Pick a shape that matches the wish.';
+  if (session.scene === 'studio' && session.draft && (session.phase === 'fabric' || session.phase === 'finish')) {
+    return liveGrade(session.draft, session.customer ?? CUSTOMERS[0], activeWish()).hint;
+  }
+  if (session.scene === 'studio' && session.phase === 'sew') {
+    const kind = session.draft ? sewKind(session.draft.sketchId) : 'seam';
+    const lines: Record<SewKind, string> = {
+      seam: 'Stay on the dots. The seam will not skip ahead.',
+      hem: 'Hemming is a slow circle. Follow it all the way.',
+      pleat: 'Fold the pleats in order, left to right.',
+      buttons: 'One glowing button at a time.',
+      zipper: 'Zip from the top dot down to the last one.',
+    };
+    return lines[kind];
+  }
+  if (session.scene === 'studio' && session.phase === 'finish' && session.draft) {
+    return liveGrade(session.draft, session.customer ?? CUSTOMERS[0], activeWish()).hint;
+  }
+  if (session.scene === 'reaction') return fresh[(round + 2) % fresh.length];
   if (session.scene === 'shelf') return 'Happy customers leave coins here.';
   if (session.scene === 'lookbook') return 'Favorites stay on this device.';
-  if (session.scene === 'reaction') return 'Beautiful work.';
+  if (session.scene === 'reviews') return 'Kind words live on the wall.';
   return '';
 }
 
@@ -565,12 +643,13 @@ function shopScene(): string {
     <div class="split">
       <div class="art shop-art">${art}</div>
       <section class="panel">
-        <p class="eyebrow">${esc(customer.name)}</p>
+        <p class="eyebrow">${esc(customer.name)} · ${esc(reputationLabel())}</p>
         <h1 class="request">${icon(customer.icon, 'icon bubble-icon')}<span>${esc(customer.request)}</span></h1>
-        <p class="hint"><i class="mini-swatch" style="background:${customer.color}"></i>${esc(customer.hint)}</p>
+        ${moodBoard(show && session.pendingTheme ? [{ kind: 'swatch', hex: session.pendingTheme.colors[0] }, { kind: 'icon', name: session.pendingTheme.icon }, { kind: 'swatch', hex: session.pendingTheme.colors[1] ?? session.pendingTheme.colors[0] }] : customer.board)}
+        <p class="hint">${esc(customer.hint)}</p>
         ${pip(pipLine())}
         <button class="btn" type="button" data-act="${show ? 'start-show' : 'design'}">${show ? 'Design the looks' : 'Design an outfit'}</button>
-        ${show ? '<button class="btn ghost" type="button" data-act="decline-show">Maybe later</button>' : ''}
+        ${show ? '<button class="btn ghost" type="button" data-act="decline-show">Maybe later</button>' : '<button class="btn ghost" type="button" data-act="reviews">Guestbook</button>'}
       </section>
     </div>`;
 }
@@ -602,7 +681,7 @@ function pokeLamp(): void {
 }
 
 function onPoster(): void {
-  if (!save.tutorialDone || save.customersServed < 2) {
+  if (!save.tutorialDone || save.customersServed < (reputation() >= 4 ? 2 : 3)) {
     toast(save.tutorialDone ? 'Sew for two customers, then the show begins.' : 'Let’s help this customer first.');
     return;
   }
@@ -684,23 +763,55 @@ function flipSketch(dir: number): void {
   draw();
 }
 
-function suggestedPattern(): FabricId {
-  if (session.mode === 'show' && session.show) {
-    const pref = session.show.theme.patterns.find((pattern) => save.fabrics.includes(pattern));
-    if (pref) return pref;
-  }
-  const mood = session.customer?.mood;
-  if (mood === 'sparkly' && save.fabrics.includes('sequins')) return 'sequins';
-  if (mood === 'floral' && save.fabrics.includes('floral')) return 'floral';
-  if (mood === 'cozy' && save.fabrics.includes('velvet')) return 'velvet';
-  if (mood === 'cozy' && save.fabrics.includes('denim')) return 'denim';
-  return 'solid';
+function activeWish() {
+  if (session.mode === 'show' && session.show) return wishFromTheme(session.show.theme);
+  return (session.customer ?? CUSTOMERS[0]).wish;
 }
 
-function suggestedColor(): string {
-  if (session.mode === 'show' && session.show) return closestPalette(session.show.theme.colors[0]);
-  if (session.customer) return closestPalette(session.customer.color);
-  return '#E56B93';
+function reputation(): number {
+  if (!save.reviews.length) return 0;
+  return save.reviews.reduce((sum, review) => sum + review.stars, 0) / save.reviews.length;
+}
+
+function reputationLabel(): string {
+  if (!save.reviews.length) return 'New shop';
+  return `Love ${reputation().toFixed(1)}`;
+}
+
+function moodBoard(bits: { kind: string; hex?: string; name?: string }[]): string {
+  const html = bits
+    .map((bit) => {
+      if (bit.kind === 'swatch' && bit.hex) return `<i class="mini-swatch" style="background:${bit.hex}" title="A clue color"></i>`;
+      if (bit.kind === 'puppy') return `<img class="pixel puppy" alt="A little puppy" src="${puppyURL()}">`;
+      return icon(bit.name ?? 'sparkle', 'icon bubble-icon');
+    })
+    .join('');
+  return `<div class="mood-board" aria-label="Mood clues">${html}</div>`;
+}
+
+function meterBlock(draft: Draft): string {
+  const customer = session.customer ?? CUSTOMERS[0];
+  const g = liveGrade(draft, customer, activeWish());
+  const filled = Math.round(g.overall * 5);
+  const hearts = [1, 2, 3, 4, 5].map((n) => `<i class="${n <= filled ? 'on' : ''}"></i>`).join('');
+  const pose = g.mood === 'sparkle' ? 'cheer' : g.mood === 'think' ? 'think' : 'frown';
+  const label = g.mood === 'sparkle' ? 'They love this' : g.mood === 'think' ? 'Hmm, close' : 'Not quite yet';
+  return `<div class="meter mood-${g.mood}" data-mood="${g.mood}">
+    <div class="meter-face">${renderPerson({ look: customer, pose, uid: 'meter' })}</div>
+    <div>
+      <p class="meter-label">${label}</p>
+      <div class="hearts" aria-label="Happiness ${filled} of 5">${hearts}</div>
+    </div>
+  </div>`;
+}
+
+function applyBrief(customer: Customer): void {
+  const brief = briefFor(save.customersServed);
+  if (!brief) return;
+  customer.request = brief.request;
+  customer.hint = brief.hint;
+  customer.wish = brief.wish;
+  customer.board = brief.board;
 }
 
 function pickSketch(): void {
@@ -709,10 +820,10 @@ function pickSketch(): void {
   if (!sketch) return;
   session.draft = {
     sketchId: sketch.id,
-    pattern: suggestedPattern(),
-    color: suggestedColor(),
+    pattern: null,
+    color: '',
     accessories: [],
-    sewQuality: 0.72,
+    sewQuality: 0,
   };
   session.phase = 'fabric';
   session.parade = false;
@@ -732,15 +843,17 @@ function studioScene(): string {
   const preview: Outfit = {
     id: 'draft',
     sketchId: draft.sketchId,
-    pattern: draft.pattern,
-    color: draft.color,
+    pattern: draft.pattern ?? 'solid',
+    color: draft.color || '#f4e4d4',
     accessories: session.phase === 'finish' ? draft.accessories : [],
   };
+  const sewKindNow = draft ? sewKind(draft.sketchId) : 'seam';
+  const autoReady = (save.sewCounts?.[sewKindNow] ?? 0) >= 2;
   const dock =
     session.phase === 'fabric'
       ? `<button class="btn" type="button" data-act="to-sew">Sew it</button>`
       : session.phase === 'sew'
-        ? `<p class="step-label">Tap each pink pin.</p><button class="btn" type="button" data-act="help-sew">Pip, help me sew</button>`
+        ? `<p class="step-label">Follow the marks.</p><div class="dock-row">${autoReady ? '<button class="btn secondary" type="button" data-act="auto-sew">Auto-stitch</button>' : ''}<button class="btn" type="button" data-act="help-sew">Pip, help me sew</button></div>`
         : `<button class="btn" type="button" data-act="finish">${esc(session.mode === 'show' ? (session.show && session.show.looks.length === 2 ? 'To the runway' : 'Save this look') : `Show ${session.customer?.name ?? 'them'}`)}</button>`;
   return `${hud()}
     <div class="split studio studio-${session.phase}">
@@ -759,6 +872,7 @@ function studioScene(): string {
             <li class="${session.phase === 'sew' ? 'on' : session.phase === 'finish' ? 'done' : ''}">Sew</li>
             <li class="${session.phase === 'finish' ? 'on' : ''}">Trim</li>
           </ol>
+          ${session.phase === 'fabric' || session.phase === 'finish' ? meterBlock(draft) : ''}
           ${session.phase === 'fabric' ? fabricControls(draft) : ''}
           ${session.phase === 'finish' ? finishControls(draft) : ''}
           ${pip(pipLine())}
@@ -770,11 +884,12 @@ function studioScene(): string {
 
 function fabricControls(draft: Draft): string {
   const owned = FABRICS.filter((fabric) => save.fabrics.includes(fabric.id));
-  return `<p class="color-name">${esc(colorName(draft.color))}</p>
+  const cloth = draft.color || '#f4e4d4';
+  return `<p class="color-name">${draft.color ? esc(colorName(draft.color)) : 'Choose a color'}</p>
     <div class="colors">${PALETTE.map((swatch) => `<button type="button" class="dot ${draft.color === swatch.hex ? 'on' : ''}" data-act="color" data-id="${swatch.hex}" aria-label="${esc(swatch.name)}" style="background:${swatch.hex}"></button>`).join('')}</div>
     <div class="patterns">${owned
-      .map((fabric) => `<button type="button" class="pat ${draft.pattern === fabric.id ? 'on' : ''}" data-act="pattern" data-id="${fabric.id}" style="--c:${draft.color}">
-          <i class="pat-${fabric.id}"></i><span>${esc(fabric.name)}</span>
+      .map((fabric) => `<button type="button" class="pat ${draft.pattern === fabric.id ? 'on' : ''}" data-act="pattern" data-id="${fabric.id}" style="--c:${cloth}">
+          <i class="pat-swatch pixel" style="background-image:url(${swatchURL(fabric.id, cloth)})"></i><span>${esc(fabric.name)}</span>
         </button>`)
       .join('')}</div>
     <button class="btn ghost" type="button" data-act="shelf">More cloth is on the shelf</button>`;
@@ -784,19 +899,9 @@ function finishControls(draft: Draft): string {
   const owned = ACCESSORIES.filter((item) => save.accessories.includes(item.id));
   return `<div class="patterns trims">${owned
     .map((item) => `<button type="button" class="pat ${draft.accessories.includes(item.id) ? 'on' : ''}" data-act="accessory" data-id="${item.id}">
-        <i class="trim-icon">${icon(trimIcon(item.id))}</i><span>${esc(item.name)}</span>
+        <i class="trim-icon"><img class="pixel" alt="" width="32" height="32" src="${trimURL(item.id)}"></i><span>${esc(item.name)}</span>
       </button>`)
     .join('')}</div>`;
-}
-
-function trimIcon(id: AccessoryId): string {
-  if (id === 'bow') return 'heart';
-  if (id === 'buttons') return 'star';
-  if (id === 'sequins') return 'sparkle';
-  if (id === 'belt') return 'needle';
-  if (id === 'hat') return 'star';
-  if (id === 'bag') return 'book';
-  return 'check';
 }
 
 function mountStudio(): () => void {
@@ -839,21 +944,27 @@ function mountSew(): () => void {
   const svg = document.querySelector('.dress-svg') as SVGSVGElement | null;
   const draft = session.draft;
   if (!svg || !draft) return () => {};
-  const layout = stitchLayout(draft.sketchId);
-  const samples = samplePolyline(layout.stitch, 16);
+  const plan = sewPlan(draft.sketchId, (save.customersServed * 17 + draft.sketchId.length * 13) >>> 0);
+  const layout = { pins: plan.pins, snips: plan.snips };
+  const samples = plan.path.length ? samplePolyline(plan.path, 18) : [];
   const done = samples.map(() => false);
-  let step: 'pin' | 'stitch' | 'snip' = 'pin';
+  let nextDot = 0;
+  let nextTap = 0;
+  let step: 'pin' | 'stitch' | 'snip' | 'tap' = plan.pins.length ? 'pin' : plan.taps.length ? 'tap' : 'stitch';
   const pins = new Set<number>();
   const snips = new Set<number>();
+  const taps = new Set<number>();
+  svg.dataset.sewKind = plan.kind;
+  svg.dataset.sewShape = plan.curved ? 'curved' : 'straight';
   let drawing = false;
   let last: { x: number; y: number } | null = null;
   let lastSound = 0;
   let stitchLocked = false;
-  svg.classList.add('step-pin');
+  svg.classList.add(step === 'pin' ? 'step-pin' : step === 'tap' ? 'step-stitch' : 'step-stitch');
   const host = svg.parentElement;
   const pads: HTMLButtonElement[] = [];
   const PAD = 56;
-  const placePads = (kind: 'pin' | 'snip', points: { x: number; y: number }[]) => {
+  const placePads = (kind: 'pin' | 'snip' | 'tap', points: { x: number; y: number }[]) => {
     pads.forEach((pad) => pad.remove());
     pads.length = 0;
     if (!host || points.length === 0) return;
@@ -894,17 +1005,20 @@ function mountSew(): () => void {
       pad.className = 'touch-pad';
       pad.dataset.act = kind;
       pad.dataset.id = String(index);
-      pad.setAttribute('aria-label', kind === 'pin' ? `Pin ${index + 1}` : `Loose thread ${index + 1}`);
+      const labelWord = kind === 'pin' ? 'Pin' : kind === 'tap' ? 'Mark' : 'Loose thread';
+      pad.setAttribute('aria-label', `${labelWord} ${index + 1}`);
       pad.style.width = `${PAD}px`;
       pad.style.height = `${PAD}px`;
       pad.style.left = `${spot.x - PAD / 2}px`;
       pad.style.top = `${spot.y - PAD / 2}px`;
-      const doneAlready = kind === 'pin' ? pins.has(index) : snips.has(index);
+      const doneAlready = kind === 'pin' ? pins.has(index) : kind === 'tap' ? taps.has(index) : snips.has(index);
       if (doneAlready) pad.classList.add('done');
+      if (kind === 'tap') pad.classList.toggle('next', index === nextTap);
       pad.addEventListener('pointerdown', (event) => {
         event.preventDefault();
         event.stopPropagation();
         if (kind === 'pin') placePin(index);
+        else if (kind === 'tap') placeTap(index);
         else placeSnip(index);
       });
       host.appendChild(pad);
@@ -933,44 +1047,81 @@ function mountSew(): () => void {
     donePath?.setAttribute('d', d);
   };
 
-  const coverage = () => done.filter(Boolean).length / done.length;
+  const dotEls: SVGCircleElement[] = [];
+  samples.forEach((point, index) => {
+    const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    dot.setAttribute('class', 'stitch-dot');
+    dot.setAttribute('cx', point.x.toFixed(1));
+    dot.setAttribute('cy', point.y.toFixed(1));
+    dot.setAttribute('r', '8');
+    dot.dataset.i = String(index);
+    svg.appendChild(dot);
+    dotEls.push(dot);
+  });
+  const needle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  needle.setAttribute('class', 'needle');
+  needle.setAttribute('r', '5');
+  needle.setAttribute('cx', String(samples[0]?.x ?? 0));
+  needle.setAttribute('cy', String(samples[0]?.y ?? 0));
+  if (samples.length) svg.appendChild(needle);
 
-  const markNear = (point: { x: number; y: number }) => {
+  const screenDist = (point: { x: number; y: number }, clientX: number, clientY: number) => {
+    const local = svg.createSVGPoint();
+    local.x = point.x;
+    local.y = point.y;
+    const matrix = svg.getScreenCTM();
+    if (!matrix) return 999;
+    const screen = local.matrixTransform(matrix);
+    return Math.hypot(screen.x - clientX, screen.y - clientY);
+  };
+
+  const advanceAt = (clientX: number, clientY: number) => {
+    if (step !== 'stitch' || stitchLocked) return;
     let hit = false;
-    samples.forEach((sample, index) => {
-      if (done[index]) return;
-      if (Math.hypot(sample.x - point.x, sample.y - point.y) <= 78) {
-        done[index] = true;
-        hit = true;
-      }
-    });
-    for (let index = 1; index < done.length - 1; index++) {
-      if (!done[index] && done[index - 1] && done[index + 1]) done[index] = true;
+    while (nextDot < samples.length && screenDist(samples[nextDot], clientX, clientY) <= 28) {
+      done[nextDot] = true;
+      dotEls[nextDot]?.classList.add('filled');
+      const here = samples[nextDot];
+      needle.setAttribute('cx', here.x.toFixed(1));
+      needle.setAttribute('cy', here.y.toFixed(1));
+      nextDot += 1;
+      hit = true;
     }
     if (!hit) return;
     redraw();
     const now = performance.now();
-    if (now - lastSound > 90) {
+    if (now - lastSound > 70) {
       lastSound = now;
       audio.sew();
     }
-    if (!stitchLocked && coverage() >= 0.55) finishStitch();
+    if (nextDot >= samples.length) finishStitch();
   };
 
   const finishStitch = () => {
     if (stitchLocked) return;
     stitchLocked = true;
-    const cov = coverage();
-    done.fill(true);
+    const cov = samples.length ? nextDot / samples.length : 1;
     redraw();
-    draft.sewQuality = Math.min(1, 0.62 + cov * 0.4);
+    draft.sewQuality = Math.min(1, 0.7 + cov * 0.3);
     loose?.setAttribute('d', '');
+    noteSew(plan.kind);
+    if (!layout.snips.length) {
+      window.setTimeout(() => {
+        if (session.phase === 'sew') {
+          session.phase = 'finish';
+          audio.sparkle();
+          draw();
+        }
+      }, 280);
+      return;
+    }
     step = 'snip';
     svg.classList.remove('step-stitch');
-    svg.classList.add('step-snip');
+    svg.classList.add('step-snip', 'sew-snap');
     setLabel('Tap the two loose threads.');
     placePads('snip', layout.snips);
-    audio.chime();
+    burstSparkle(host);
+    audio.sparkle();
   };
 
   const placePin = (index: number) => {
@@ -983,8 +1134,31 @@ function mountSew(): () => void {
       step = 'stitch';
       svg.classList.remove('step-pin');
       svg.classList.add('step-stitch');
-      setLabel('Drag along the pink thread.');
+      setLabel(plan.label);
       placePads('pin', []);
+    }
+  };
+
+  const placeTap = (index: number) => {
+    if (step !== 'tap' || index !== nextTap || taps.has(index)) return;
+    taps.add(index);
+    nextTap += 1;
+    audio.pin();
+    pads.forEach((pad, padIndex) => {
+      pad.classList.toggle('done', taps.has(padIndex));
+      pad.classList.toggle('next', padIndex === nextTap);
+    });
+    if (nextTap >= plan.taps.length) {
+      noteSew(plan.kind);
+      draft.sewQuality = 0.86;
+      window.setTimeout(() => {
+        if (session.phase === 'sew') {
+          session.phase = 'finish';
+          burstSparkle(host);
+          audio.sparkle();
+          draw();
+        }
+      }, 220);
     }
   };
 
@@ -1003,16 +1177,6 @@ function mountSew(): () => void {
         }
       }, 280);
     }
-  };
-
-  const pointOf = (event: PointerEvent) => {
-    const point = svg.createSVGPoint();
-    point.x = event.clientX;
-    point.y = event.clientY;
-    const matrix = svg.getScreenCTM();
-    if (!matrix) return { x: 0, y: 0 };
-    const local = point.matrixTransform(matrix.inverse());
-    return { x: local.x, y: local.y };
   };
 
   const down = (event: PointerEvent) => {
@@ -1035,23 +1199,19 @@ function mountSew(): () => void {
     } catch {
       /* Touch listeners cover the drag when this pointer id is not live. */
     }
-    last = pointOf(event);
-    markNear(last);
+    last = { x: event.clientX, y: event.clientY };
+    advanceAt(event.clientX, event.clientY);
   };
 
   const move = (event: PointerEvent) => {
     if (!drawing || step !== 'stitch') return;
-    const point = pointOf(event);
+    const point = { x: event.clientX, y: event.clientY };
     if (last) {
       const dist = Math.hypot(point.x - last.x, point.y - last.y);
-      const steps = Math.max(1, Math.ceil(dist / 8));
+      const steps = Math.max(1, Math.ceil(dist / 6));
       for (let index = 1; index <= steps; index++) {
-        markNear({
-          x: last.x + ((point.x - last.x) * index) / steps,
-          y: last.y + ((point.y - last.y) * index) / steps,
-        });
+        advanceAt(last.x + ((point.x - last.x) * index) / steps, last.y + ((point.y - last.y) * index) / steps);
       }
-      loose?.setAttribute('d', `M ${last.x.toFixed(1)} ${last.y.toFixed(1)} L ${point.x.toFixed(1)} ${point.y.toFixed(1)}`);
     }
     last = point;
   };
@@ -1091,8 +1251,10 @@ function mountSew(): () => void {
   window.addEventListener('touchend', up);
   const refreshPads = () => {
     if (step === 'pin') placePads('pin', layout.pins);
+    else if (step === 'tap') placePads('tap', plan.taps);
     else if (step === 'snip') placePads('snip', layout.snips);
   };
+  setLabel(step === 'pin' ? 'Tap each pink pin.' : plan.label);
   refreshPads();
   requestAnimationFrame(refreshPads);
   const onResize = () => refreshPads();
@@ -1137,11 +1299,27 @@ function samplePolyline(points: { x: number; y: number }[], step: number): { x: 
   return out;
 }
 
-function helpSew(): void {
+function noteSew(kind: SewKind): void {
+  const counts = save.sewCounts ?? {};
+  counts[kind] = (counts[kind] ?? 0) + 1;
+  save.sewCounts = counts;
+  persist();
+}
+
+function burstSparkle(host: HTMLElement | null): void {
+  if (!host) return;
+  const burst = document.createElement('div');
+  burst.className = 'sew-spark';
+  burst.innerHTML = '<i></i><i></i><i></i><i></i><i></i><i></i>';
+  host.appendChild(burst);
+  window.setTimeout(() => burst.remove(), 700);
+}
+
+function helpSew(auto = false): void {
   if (!session.draft) return;
-  session.draft.sewQuality = 0.58;
+  session.draft.sewQuality = auto ? 0.74 : 0.58;
   session.phase = 'finish';
-  toast('Pip finished the stitches. You can still add trims.');
+  toast(auto ? 'Auto-stitch done. The trims are still yours.' : 'Pip finished the stitches. You can still add trims.');
   audio.chime();
   draw();
 }
@@ -1165,7 +1343,7 @@ function finishOutfit(): void {
   if (!draft) return;
   if (session.mode === 'show' && session.show) {
     const theme = session.show.theme;
-    const matched = theme.sketches.includes(draft.sketchId) || theme.patterns.includes(draft.pattern);
+    const matched = theme.sketches.includes(draft.sketchId) || (draft.pattern ? theme.patterns.includes(draft.pattern) : false);
     const stars = draft.sewQuality > 0.9 || matched ? 3 : 2;
     const outfit = draftToOutfit(draft, stars, theme.id);
     session.show.looks.push(outfit);
@@ -1181,13 +1359,34 @@ function finishOutfit(): void {
     return;
   }
   const customer = session.customer ?? CUSTOMERS[0];
-  const score = judge(draft, customer);
-  const outfit = draftToOutfit(draft, score.stars);
+  const score = grade(draft, customer, activeWish());
+  const outfit = draftToOutfit(draft, score.review);
   session.lastScore = score;
   session.lastOutfit = outfit;
-  earn(score.coins, score.hearts, score.stars);
+  save.reviews.unshift({
+    id: oid(),
+    name: customer.name,
+    stars: score.review,
+    quote: score.line,
+    coins: score.coins,
+    look: {
+      skin: customer.skin,
+      hair: customer.hair,
+      hairColor: customer.hairColor,
+      glasses: customer.glasses,
+      freckles: customer.freckles,
+      beret: customer.beret,
+      blush: customer.blush,
+    },
+  });
+  save.reviews = save.reviews.slice(0, 24);
+  earn(score.coins, score.hearts, score.review);
   save.customersServed += 1;
   save.tutorialDone = true;
+  const rewards = grantRoundRewards(save);
+  if (session.bonus > 1) save.coins += session.bonus;
+  if (session.event === 'rush') save.hearts += 1;
+  if (rewards.length) toast(`New in the shop: ${rewards.join(', ')}.`);
   persist();
   audio.chime();
   if (score.sparkle) audio.sparkle();
@@ -1199,8 +1398,8 @@ function draftToOutfit(draft: Draft, stars: number, themeId?: string): Outfit {
   return {
     id: oid(),
     sketchId: draft.sketchId,
-    pattern: draft.pattern,
-    color: draft.color,
+    pattern: draft.pattern ?? 'solid',
+    color: draft.color || '#f4e4d4',
     accessories: [...draft.accessories],
     stars,
     label: `${colorName(draft.color)} ${sketch.name}`,
@@ -1231,15 +1430,51 @@ function reactionScene(): string {
       ${hearts()}
       <div class="reaction-person">${renderPerson({ look: customer, outfit, pose: 'twirl', uid: nextId('react') })}</div>
       <section class="panel slim">
-        <div class="stars" aria-label="${score.stars} stars">${[1, 2, 3].map((n) => `<span class="${n <= score.stars ? 'on' : ''}">${icon('star')}</span>`).join('')}</div>
-        <h1>${esc(customer.name)} loves it</h1>
+        <div class="stars" aria-label="${score.review} star review">${[1, 2, 3, 4, 5].map((n) => `<span class="${n <= score.review ? 'on' : ''}">${icon('star')}</span>`).join('')}</div>
+        <h1>${esc(customer.name)}’s review</h1>
         <p class="request-line">${esc(score.line)}</p>
-        <p class="hint">+${score.coins} coins · +${score.hearts} hearts</p>
+        <ul class="receipt">
+          <li><span>Color</span><b>${score.starsFor.color}/5</b></li>
+          <li><span>Cloth</span><b>${score.starsFor.cloth}/5</b></li>
+          <li><span>Shape</span><b>${score.starsFor.shape}/5</b></li>
+          <li><span>Stitch</span><b>${score.starsFor.sew}/5</b></li>
+          <li><span>Base</span><b>${score.basePay}</b></li>
+          <li><span>Tip</span><b>${score.tip}</b></li>
+          <li><span>Secret wish</span><b>${score.secretBonus ? `+${score.secretBonus}` : '—'}</b></li>
+          <li class="total"><span>Paid</span><b>${score.coins} coins</b></li>
+        </ul>
         ${pip(pipLine())}
         <button class="btn" type="button" data-act="save-look">${saved ? 'Saved in the lookbook' : 'Keep in my lookbook'}</button>
         <button class="btn secondary" type="button" data-act="share-look">Save a picture</button>
         <button class="btn ghost" type="button" data-act="next-customer">Next customer</button>
       </section>
+    </div>`;
+}
+
+function reviewsScene(): string {
+  const cards = save.reviews
+    .map(
+      (review, index) => `<article class="review-card">
+        <div class="review-face">${renderPerson({ look: review.look, pose: review.stars >= 4 ? 'cheer' : 'idle', uid: `rev${index}` })}</div>
+        <div>
+          <h2>${esc(review.name)}</h2>
+          <p class="stars">${[1, 2, 3, 4, 5].map((n) => `<span class="${n <= review.stars ? 'on' : ''}">${icon('star')}</span>`).join('')}</p>
+          <p>${esc(review.quote)}</p>
+        </div>
+      </article>`,
+    )
+    .join('');
+  return `${hud()}
+    <div class="book-page">
+      <div class="sketch-top">
+        <button class="icon-btn" type="button" data-act="back" aria-label="Back">${icon('back')}</button>
+        <div>
+          <p class="eyebrow">${esc(reputationLabel())}</p>
+          <h1>Guestbook</h1>
+        </div>
+      </div>
+      ${pip(pipLine())}
+      ${cards || '<div class="empty"><h2>No reviews yet</h2><p>Sew a look and the wall will fill up.</p></div>'}
     </div>`;
 }
 
@@ -1282,9 +1517,7 @@ async function shareCurrent(): Promise<void> {
     : session.lastOutfit;
   if (!outfit) return;
   try {
-    const svg = renderShareCard(outfit, nextId('share'));
-    const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
+    const url = dressFormURL(outfit, 'fashion');
     const image = new Image();
     await new Promise<void>((resolve, reject) => {
       image.onload = () => resolve();
@@ -1296,8 +1529,10 @@ async function shareCurrent(): Promise<void> {
     canvas.height = 1440;
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('canvas');
-    ctx.drawImage(image, 0, 0, 1080, 1440);
-    URL.revokeObjectURL(url);
+    ctx.fillStyle = '#fbf6f0';
+    ctx.fillRect(0, 0, 1080, 1440);
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(image, 270, 240, 540, 864);
     ctx.fillStyle = '#2a211c';
     ctx.textAlign = 'center';
     ctx.font = '700 72px Fraunces, Georgia, serif';
@@ -1400,7 +1635,16 @@ function shelfCard(
 ): string {
   if (secret && !owned) return '';
   const tag = owned ? 'Yours' : secret ? 'Found' : `${price} coins`;
+  const art =
+    kind === 'sketch'
+      ? sketchURL(id as SketchId)
+      : kind === 'fabric'
+        ? swatchURL(id as FabricId, '#e56b93')
+        : kind === 'accessory'
+          ? trimURL(id as AccessoryId)
+          : decorURL(id);
   return `<button class="shelf-card ${owned ? 'owned' : ''}" type="button" data-act="buy" data-kind="${kind}" data-id="${id}">
+    <img class="pixel shelf-art" alt="" src="${art}">
     <strong>${esc(name)}</strong>
     <span>${esc(blurb)}</span>
     <em>${esc(tag)}</em>
@@ -1480,19 +1724,19 @@ function makeRivals(theme: Theme): Rival[] {
     {
       name: 'Maison Lumi',
       patterns: ['floral', 'tulle', 'polka', 'solid'],
-      sketches: ['garden-gown', 'sunny-dress', 'twirl-set', 'pleat-parade'],
+      sketches: ['ball-gown', 'princess-gown', 'garden-roses', 'sunset-chiffon', 'candy-party'],
       acc: ['bow', 'shoes'],
     },
     {
       name: 'Atelier Pip',
       patterns: ['stripes', 'denim', 'solid'],
-      sketches: ['crop-jacket', 'palazzo', 'jumpsuit', 'rain-coat'],
+      sketches: ['mermaid-gown', 'cherry-kimono', 'tiered-ruffle', 'peacock-train'],
       acc: ['buttons', 'belt', 'shoes'],
     },
     {
       name: 'House of Nia',
       patterns: ['sequins', 'velvet', 'rainbow'],
-      sketches: ['hero-cape', 'garden-gown', 'jumpsuit', 'puff-pencil'],
+      sketches: ['starry-gown', 'ice-crystal', 'butterfly-cape', 'ball-gown', 'hero-cape'],
       acc: ['hat', 'sequins', 'belt'],
     },
   ];
@@ -1552,17 +1796,7 @@ function runwayScene(): string {
 }
 
 function photographer(skin: string, shirt: string): string {
-  return `<svg viewBox="0 0 90 130" aria-hidden="true">
-    <ellipse cx="45" cy="124" rx="22" ry="5" fill="#000" opacity="0.25"/>
-    <path d="M28 70 h34 v40 h-34 z" fill="${shirt}"/>
-    <circle cx="45" cy="40" r="18" fill="${skin}"/>
-    <circle cx="38" cy="38" r="2" fill="#2a211c"/>
-    <circle cx="52" cy="38" r="2" fill="#2a211c"/>
-    <path d="M40 46 q5 5 10 0" fill="none" stroke="#2a211c" stroke-width="1.4" stroke-linecap="round"/>
-    <rect x="48" y="58" width="28" height="16" rx="3" fill="#1a120e"/>
-    <circle class="lens" cx="70" cy="66" r="6" fill="#8ec6e6" stroke="#f2c14e" stroke-width="2"/>
-    <circle class="flash" cx="58" cy="54" r="4" fill="#fff6d0"/>
-  </svg>`;
+  return `<img class="pixel photog-sprite" alt="" width="96" height="144" src="${photogURL(skin, shirt)}">`;
 }
 
 function crowd(shift: number): string {
@@ -1571,7 +1805,7 @@ function crowd(shift: number): string {
   const skins = ['#f6d3ba', '#e7b48a', '#8d5524', '#c68642', '#5c3a2a'];
   return Array.from({ length: 6 }, (_, index) => {
     const i = index + shift;
-    return `<span class="fan" style="--i:${index};--shirt:${shirts[i % shirts.length]};--hair:${hairs[i % hairs.length]};--skin:${skins[i % skins.length]}"></span>`;
+    return `<img class="pixel fan" alt="" style="--i:${index}" width="48" height="64" src="${fanURL(skins[i % skins.length], hairs[i % hairs.length], shirts[i % shirts.length])}">`;
   }).join('');
 }
 
@@ -1867,12 +2101,24 @@ function galleryScene(): string {
       return `<div class="gal-person">${renderPerson({ look: person, outfit, pose: 'stand', uid: `gp${index}` })}<span>${esc(person.name)}</span></div>`;
     })
     .join('');
+  const gowns = RUNWAY_GOWNS.map((id, index) => {
+    const outfit: Outfit = {
+      id: `gown-${id}`,
+      sketchId: id,
+      pattern: patterns[index % patterns.length],
+      color: PALETTE[(index * 2 + 1) % PALETTE.length].hex,
+      accessories: ['bow', 'shoes'],
+    };
+    return `<figure class="look-card static gown-card"><div>${renderPerson({ look: MODELS[index % MODELS.length], outfit, pose: 'stand', uid: `gown${index}` })}</div><figcaption>${esc(sketchById(id).name)}</figcaption></figure>`;
+  }).join('');
   return `${hud()}
     <div class="book-page">
       <div class="sketch-top">
         <button class="icon-btn" type="button" data-act="home" aria-label="Home">${icon('back')}</button>
         <h1>Pattern library</h1>
       </div>
+      <h2>Runway gowns</h2>
+      <div class="look-grid gown-row">${gowns}</div>
       <div class="look-grid">${cards}</div>
       <div class="gal-people">${people}</div>
     </div>`;
@@ -1925,6 +2171,10 @@ function goBack(): void {
   if (session.scene === 'lookbook' && session.viewing) {
     session.viewing = null;
     draw();
+    return;
+  }
+  if (session.scene === 'reviews') {
+    returnToShop();
     return;
   }
   if (session.scene === 'gallery') {
