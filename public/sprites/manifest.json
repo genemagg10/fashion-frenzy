@@ -1,0 +1,3349 @@
+{
+ "name": "Fashion Frenzy sprite pack v1",
+ "style": "High-detail cozy pixel-art chibi (big sparkly eyes, soft shading, colored outlines), generated from one shared style reference, keyed from #00FF00 (plants from #FF00FF).",
+ "basePath": "public/sprites/ -> load with `${import.meta.env.BASE_URL}sprites/<file minus the leading 'sprites/'>` (file paths below are relative to public/).",
+ "rendering": "Sources are soft-edged pixel art (not a strict 1px grid): draw at 1x or downscale with imageSmoothingEnabled=true; avoid upscaling past ~1.5x. Anchor is bottom-center unless noted; baseline_y is the floor/cut line inside the canvas, so draw at (x - width/2, floorY - baseline_y).",
+ "colorway": {
+  "approach": "tint-base + mask",
+  "why": "16 palette colors x 22 garments (352 combos) plus 9 fabrics is too many to pre-render consistently. Each tintable sprite is drawn in white fabric with grey-lavender shading and ships a .mask.png whose alpha marks fabric pixels only (skin, hair, eyes, gold trim, jewels, pins, form and wood excluded). Multiplying the palette hex through the mask gives the exact palette color with shading kept.",
+  "recipe_js": "function tinted(base, mask, hex){ const c=document.createElement('canvas'); c.width=base.width; c.height=base.height; const x=c.getContext('2d'); x.drawImage(base,0,0); x.globalCompositeOperation='multiply'; x.fillStyle=hex; x.fillRect(0,0,c.width,c.height); x.globalCompositeOperation='destination-in'; x.drawImage(mask,0,0); const o=document.createElement('canvas'); o.width=c.width; o.height=c.height; const y=o.getContext('2d'); y.drawImage(base,0,0); y.drawImage(c,0,0); return o; } // cache per sprite+color",
+  "fabrics": "Patterns (stripes, polka, floral, denim, sequins, velvet, tulle, rainbow): after the multiply step, draw the pattern tile onto the tinted layer with globalCompositeOperation='source-atop' at ~35-60% alpha (it stays clipped to the fabric), then composite over the base.",
+  "signature": "models/signature/* are fixed, pre-colored showcase versions (one colorway each): rivals, title/cover, lookbook, anywhere the player did not choose a color.",
+  "not_tintable": "forms/form-*.png sewing-step states are undyed muslin by design."
+ },
+ "palette": [
+  {
+   "id": "blush",
+   "hex": "#F4B8C8"
+  },
+  {
+   "id": "rose",
+   "hex": "#E56B93"
+  },
+  {
+   "id": "cherry",
+   "hex": "#C23B4B"
+  },
+  {
+   "id": "peach",
+   "hex": "#F3A57A"
+  },
+  {
+   "id": "butter",
+   "hex": "#F6D56B"
+  },
+  {
+   "id": "marigold",
+   "hex": "#E8943A"
+  },
+  {
+   "id": "sage",
+   "hex": "#A8C3A0"
+  },
+  {
+   "id": "leaf",
+   "hex": "#3E8F62"
+  },
+  {
+   "id": "sky",
+   "hex": "#8EC6E6"
+  },
+  {
+   "id": "sea",
+   "hex": "#2F7C8A"
+  },
+  {
+   "id": "navy",
+   "hex": "#24315C"
+  },
+  {
+   "id": "lilac",
+   "hex": "#CDB4E4"
+  },
+  {
+   "id": "plum",
+   "hex": "#7A4E8A"
+  },
+  {
+   "id": "cream",
+   "hex": "#F7F1E6"
+  },
+  {
+   "id": "cocoa",
+   "hex": "#6B4332"
+  },
+  {
+   "id": "ink",
+   "hex": "#2C3338"
+  }
+ ],
+ "counts": {
+  "model-signature": 22,
+  "model-tint-base": 22,
+  "model-tint-mask": 22,
+  "garment": 22,
+  "garment-mask": 22,
+  "dress-form": 27,
+  "dress-form-mask": 22,
+  "customer-full": 9,
+  "customer-bust": 36,
+  "pip": 6,
+  "runway": 4,
+  "runway-crowd": 8,
+  "prop": 7
+ },
+ "files": [
+  {
+   "category": "model-signature",
+   "garment": "ball-gown",
+   "name": "Tulle Ball Gown",
+   "color": "blush",
+   "tintable": false,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Runway / rival / showcase figure in its signature colorway. Draw at (x - w/2, floorY - 346).",
+   "file": "sprites/models/signature/ball-gown.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-signature",
+   "garment": "princess-gown",
+   "name": "Princess Gown",
+   "color": "sky",
+   "tintable": false,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Runway / rival / showcase figure in its signature colorway. Draw at (x - w/2, floorY - 346).",
+   "file": "sprites/models/signature/princess-gown.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-signature",
+   "garment": "mermaid-gown",
+   "name": "Mermaid Gown",
+   "color": "sea",
+   "tintable": false,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Runway / rival / showcase figure in its signature colorway. Draw at (x - w/2, floorY - 346).",
+   "file": "sprites/models/signature/mermaid-gown.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-signature",
+   "garment": "sunset-chiffon",
+   "name": "Sunset Chiffon",
+   "color": "sunset (rose to butter fade)",
+   "tintable": false,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Runway / rival / showcase figure in its signature colorway. Draw at (x - w/2, floorY - 346).",
+   "file": "sprites/models/signature/sunset-chiffon.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-signature",
+   "garment": "garden-roses",
+   "name": "Flower Garden Gown",
+   "color": "sage with rose embroidery",
+   "tintable": false,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Runway / rival / showcase figure in its signature colorway. Draw at (x - w/2, floorY - 346).",
+   "file": "sprites/models/signature/garden-roses.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-signature",
+   "garment": "starry-gown",
+   "name": "Starry Night Gown",
+   "color": "navy with gold stars",
+   "tintable": false,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Runway / rival / showcase figure in its signature colorway. Draw at (x - w/2, floorY - 346).",
+   "file": "sprites/models/signature/starry-gown.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-base",
+   "garment": "ball-gown",
+   "name": "Tulle Ball Gown",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/models/tint/ball-gown.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Player-designed look: draw this, then multiply the chosen palette color through the matching .mask.png (see README).",
+   "file": "sprites/models/tint/ball-gown.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-mask",
+   "garment": "ball-gown",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Alpha = how much of the palette color to apply at that pixel (garment fabric only; skin, hair, gold trim excluded).",
+   "file": "sprites/models/tint/ball-gown.mask.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-base",
+   "garment": "princess-gown",
+   "name": "Princess Gown",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/models/tint/princess-gown.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Player-designed look: draw this, then multiply the chosen palette color through the matching .mask.png (see README).",
+   "file": "sprites/models/tint/princess-gown.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-mask",
+   "garment": "princess-gown",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Alpha = how much of the palette color to apply at that pixel (garment fabric only; skin, hair, gold trim excluded).",
+   "file": "sprites/models/tint/princess-gown.mask.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-base",
+   "garment": "mermaid-gown",
+   "name": "Mermaid Gown",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/models/tint/mermaid-gown.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Player-designed look: draw this, then multiply the chosen palette color through the matching .mask.png (see README).",
+   "file": "sprites/models/tint/mermaid-gown.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-mask",
+   "garment": "mermaid-gown",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Alpha = how much of the palette color to apply at that pixel (garment fabric only; skin, hair, gold trim excluded).",
+   "file": "sprites/models/tint/mermaid-gown.mask.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-base",
+   "garment": "sunset-chiffon",
+   "name": "Sunset Chiffon",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/models/tint/sunset-chiffon.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Player-designed look: draw this, then multiply the chosen palette color through the matching .mask.png (see README).",
+   "file": "sprites/models/tint/sunset-chiffon.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-mask",
+   "garment": "sunset-chiffon",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Alpha = how much of the palette color to apply at that pixel (garment fabric only; skin, hair, gold trim excluded).",
+   "file": "sprites/models/tint/sunset-chiffon.mask.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-base",
+   "garment": "garden-roses",
+   "name": "Flower Garden Gown",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/models/tint/garden-roses.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Player-designed look: draw this, then multiply the chosen palette color through the matching .mask.png (see README).",
+   "file": "sprites/models/tint/garden-roses.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-mask",
+   "garment": "garden-roses",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Alpha = how much of the palette color to apply at that pixel (garment fabric only; skin, hair, gold trim excluded).",
+   "file": "sprites/models/tint/garden-roses.mask.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-base",
+   "garment": "starry-gown",
+   "name": "Starry Night Gown",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/models/tint/starry-gown.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Player-designed look: draw this, then multiply the chosen palette color through the matching .mask.png (see README).",
+   "file": "sprites/models/tint/starry-gown.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-mask",
+   "garment": "starry-gown",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Alpha = how much of the palette color to apply at that pixel (garment fabric only; skin, hair, gold trim excluded).",
+   "file": "sprites/models/tint/starry-gown.mask.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-signature",
+   "garment": "butterfly-cape",
+   "name": "Butterfly Cape Dress",
+   "color": "lilac",
+   "tintable": false,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Runway / rival / showcase figure in its signature colorway. Draw at (x - w/2, floorY - 346).",
+   "file": "sprites/models/signature/butterfly-cape.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-signature",
+   "garment": "tiered-ruffle",
+   "name": "Ruffled Tier Gown",
+   "color": "peach/coral",
+   "tintable": false,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Runway / rival / showcase figure in its signature colorway. Draw at (x - w/2, floorY - 346).",
+   "file": "sprites/models/signature/tiered-ruffle.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-signature",
+   "garment": "ice-crystal",
+   "name": "Ice Crystal Gown",
+   "color": "sky (icy pale)",
+   "tintable": false,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Runway / rival / showcase figure in its signature colorway. Draw at (x - w/2, floorY - 346).",
+   "file": "sprites/models/signature/ice-crystal.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-signature",
+   "garment": "candy-party",
+   "name": "Candy Party Dress",
+   "color": "candy pastels (blush/mint/butter stripes)",
+   "tintable": false,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Runway / rival / showcase figure in its signature colorway. Draw at (x - w/2, floorY - 346).",
+   "file": "sprites/models/signature/candy-party.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-signature",
+   "garment": "peacock-train",
+   "name": "Peacock Train",
+   "color": "leaf (emerald) with jewel eyes",
+   "tintable": false,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Runway / rival / showcase figure in its signature colorway. Draw at (x - w/2, floorY - 346).",
+   "file": "sprites/models/signature/peacock-train.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-signature",
+   "garment": "cherry-kimono",
+   "name": "Cherry Blossom Wrap",
+   "color": "blush with cherry obi",
+   "tintable": false,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Runway / rival / showcase figure in its signature colorway. Draw at (x - w/2, floorY - 346).",
+   "file": "sprites/models/signature/cherry-kimono.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-base",
+   "garment": "butterfly-cape",
+   "name": "Butterfly Cape Dress",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/models/tint/butterfly-cape.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Player-designed look: draw this, then multiply the chosen palette color through the matching .mask.png (see README).",
+   "file": "sprites/models/tint/butterfly-cape.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-mask",
+   "garment": "butterfly-cape",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Alpha = how much of the palette color to apply at that pixel (garment fabric only; skin, hair, gold trim excluded).",
+   "file": "sprites/models/tint/butterfly-cape.mask.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-base",
+   "garment": "tiered-ruffle",
+   "name": "Ruffled Tier Gown",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/models/tint/tiered-ruffle.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Player-designed look: draw this, then multiply the chosen palette color through the matching .mask.png (see README).",
+   "file": "sprites/models/tint/tiered-ruffle.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-mask",
+   "garment": "tiered-ruffle",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Alpha = how much of the palette color to apply at that pixel (garment fabric only; skin, hair, gold trim excluded).",
+   "file": "sprites/models/tint/tiered-ruffle.mask.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-base",
+   "garment": "ice-crystal",
+   "name": "Ice Crystal Gown",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/models/tint/ice-crystal.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Player-designed look: draw this, then multiply the chosen palette color through the matching .mask.png (see README).",
+   "file": "sprites/models/tint/ice-crystal.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-mask",
+   "garment": "ice-crystal",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Alpha = how much of the palette color to apply at that pixel (garment fabric only; skin, hair, gold trim excluded).",
+   "file": "sprites/models/tint/ice-crystal.mask.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-base",
+   "garment": "candy-party",
+   "name": "Candy Party Dress",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/models/tint/candy-party.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Player-designed look: draw this, then multiply the chosen palette color through the matching .mask.png (see README).",
+   "file": "sprites/models/tint/candy-party.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-mask",
+   "garment": "candy-party",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Alpha = how much of the palette color to apply at that pixel (garment fabric only; skin, hair, gold trim excluded).",
+   "file": "sprites/models/tint/candy-party.mask.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-base",
+   "garment": "peacock-train",
+   "name": "Peacock Train",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/models/tint/peacock-train.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Player-designed look: draw this, then multiply the chosen palette color through the matching .mask.png (see README).",
+   "file": "sprites/models/tint/peacock-train.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-mask",
+   "garment": "peacock-train",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Alpha = how much of the palette color to apply at that pixel (garment fabric only; skin, hair, gold trim excluded).",
+   "file": "sprites/models/tint/peacock-train.mask.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-base",
+   "garment": "cherry-kimono",
+   "name": "Cherry Blossom Wrap",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/models/tint/cherry-kimono.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Player-designed look: draw this, then multiply the chosen palette color through the matching .mask.png (see README).",
+   "file": "sprites/models/tint/cherry-kimono.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-mask",
+   "garment": "cherry-kimono",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Alpha = how much of the palette color to apply at that pixel (garment fabric only; skin, hair, gold trim excluded).",
+   "file": "sprites/models/tint/cherry-kimono.mask.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-signature",
+   "garment": "sunny-dress",
+   "name": "Sunny Dress",
+   "color": "butter",
+   "tintable": false,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Runway / rival / showcase figure in its signature colorway. Draw at (x - w/2, floorY - 346).",
+   "file": "sprites/models/signature/sunny-dress.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-signature",
+   "garment": "rain-coat",
+   "name": "Rain Coat",
+   "color": "sea",
+   "tintable": false,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Runway / rival / showcase figure in its signature colorway. Draw at (x - w/2, floorY - 346).",
+   "file": "sprites/models/signature/rain-coat.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-signature",
+   "garment": "twirl-set",
+   "name": "Twirl Set",
+   "color": "rose",
+   "tintable": false,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Runway / rival / showcase figure in its signature colorway. Draw at (x - w/2, floorY - 346).",
+   "file": "sprites/models/signature/twirl-set.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-signature",
+   "garment": "hero-cape",
+   "name": "Hero Cape",
+   "color": "navy dress + cherry cape",
+   "tintable": false,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Runway / rival / showcase figure in its signature colorway. Draw at (x - w/2, floorY - 346).",
+   "file": "sprites/models/signature/hero-cape.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-signature",
+   "garment": "garden-gown",
+   "name": "Garden Gown",
+   "color": "blush",
+   "tintable": false,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Runway / rival / showcase figure in its signature colorway. Draw at (x - w/2, floorY - 346).",
+   "file": "sprites/models/signature/garden-gown.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-base",
+   "garment": "sunny-dress",
+   "name": "Sunny Dress",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/models/tint/sunny-dress.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Player-designed look: draw this, then multiply the chosen palette color through the matching .mask.png (see README).",
+   "file": "sprites/models/tint/sunny-dress.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-mask",
+   "garment": "sunny-dress",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Alpha = how much of the palette color to apply at that pixel (garment fabric only; skin, hair, gold trim excluded).",
+   "file": "sprites/models/tint/sunny-dress.mask.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-base",
+   "garment": "rain-coat",
+   "name": "Rain Coat",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/models/tint/rain-coat.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Player-designed look: draw this, then multiply the chosen palette color through the matching .mask.png (see README).",
+   "file": "sprites/models/tint/rain-coat.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-mask",
+   "garment": "rain-coat",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Alpha = how much of the palette color to apply at that pixel (garment fabric only; skin, hair, gold trim excluded).",
+   "file": "sprites/models/tint/rain-coat.mask.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-base",
+   "garment": "twirl-set",
+   "name": "Twirl Set",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/models/tint/twirl-set.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Player-designed look: draw this, then multiply the chosen palette color through the matching .mask.png (see README).",
+   "file": "sprites/models/tint/twirl-set.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-mask",
+   "garment": "twirl-set",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Alpha = how much of the palette color to apply at that pixel (garment fabric only; skin, hair, gold trim excluded).",
+   "file": "sprites/models/tint/twirl-set.mask.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-base",
+   "garment": "hero-cape",
+   "name": "Hero Cape",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/models/tint/hero-cape.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Player-designed look: draw this, then multiply the chosen palette color through the matching .mask.png (see README).",
+   "file": "sprites/models/tint/hero-cape.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-mask",
+   "garment": "hero-cape",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Alpha = how much of the palette color to apply at that pixel (garment fabric only; skin, hair, gold trim excluded).",
+   "file": "sprites/models/tint/hero-cape.mask.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-base",
+   "garment": "garden-gown",
+   "name": "Garden Gown",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/models/tint/garden-gown.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Player-designed look: draw this, then multiply the chosen palette color through the matching .mask.png (see README).",
+   "file": "sprites/models/tint/garden-gown.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-mask",
+   "garment": "garden-gown",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Alpha = how much of the palette color to apply at that pixel (garment fabric only; skin, hair, gold trim excluded).",
+   "file": "sprites/models/tint/garden-gown.mask.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-signature",
+   "garment": "puff-pencil",
+   "name": "Puff & Pencil",
+   "color": "lilac",
+   "tintable": false,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Runway / rival / showcase figure in its signature colorway. Draw at (x - w/2, floorY - 346).",
+   "file": "sprites/models/signature/puff-pencil.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-signature",
+   "garment": "palazzo",
+   "name": "Palazzo Day",
+   "color": "marigold + cream",
+   "tintable": false,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Runway / rival / showcase figure in its signature colorway. Draw at (x - w/2, floorY - 346).",
+   "file": "sprites/models/signature/palazzo.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-signature",
+   "garment": "crop-jacket",
+   "name": "Cropped Jacket",
+   "color": "cherry",
+   "tintable": false,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Runway / rival / showcase figure in its signature colorway. Draw at (x - w/2, floorY - 346).",
+   "file": "sprites/models/signature/crop-jacket.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-signature",
+   "garment": "pleat-parade",
+   "name": "Pleat Parade",
+   "color": "sage",
+   "tintable": false,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Runway / rival / showcase figure in its signature colorway. Draw at (x - w/2, floorY - 346).",
+   "file": "sprites/models/signature/pleat-parade.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-signature",
+   "garment": "jumpsuit",
+   "name": "One-Piece Wonder",
+   "color": "plum",
+   "tintable": false,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Runway / rival / showcase figure in its signature colorway. Draw at (x - w/2, floorY - 346).",
+   "file": "sprites/models/signature/jumpsuit.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-base",
+   "garment": "puff-pencil",
+   "name": "Puff & Pencil",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/models/tint/puff-pencil.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Player-designed look: draw this, then multiply the chosen palette color through the matching .mask.png (see README).",
+   "file": "sprites/models/tint/puff-pencil.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-mask",
+   "garment": "puff-pencil",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Alpha = how much of the palette color to apply at that pixel (garment fabric only; skin, hair, gold trim excluded).",
+   "file": "sprites/models/tint/puff-pencil.mask.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-base",
+   "garment": "palazzo",
+   "name": "Palazzo Day",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/models/tint/palazzo.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Player-designed look: draw this, then multiply the chosen palette color through the matching .mask.png (see README).",
+   "file": "sprites/models/tint/palazzo.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-mask",
+   "garment": "palazzo",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Alpha = how much of the palette color to apply at that pixel (garment fabric only; skin, hair, gold trim excluded).",
+   "file": "sprites/models/tint/palazzo.mask.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-base",
+   "garment": "crop-jacket",
+   "name": "Cropped Jacket",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/models/tint/crop-jacket.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Player-designed look: draw this, then multiply the chosen palette color through the matching .mask.png (see README).",
+   "file": "sprites/models/tint/crop-jacket.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-mask",
+   "garment": "crop-jacket",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Alpha = how much of the palette color to apply at that pixel (garment fabric only; skin, hair, gold trim excluded).",
+   "file": "sprites/models/tint/crop-jacket.mask.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-base",
+   "garment": "pleat-parade",
+   "name": "Pleat Parade",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/models/tint/pleat-parade.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Player-designed look: draw this, then multiply the chosen palette color through the matching .mask.png (see README).",
+   "file": "sprites/models/tint/pleat-parade.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-mask",
+   "garment": "pleat-parade",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Alpha = how much of the palette color to apply at that pixel (garment fabric only; skin, hair, gold trim excluded).",
+   "file": "sprites/models/tint/pleat-parade.mask.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-base",
+   "garment": "jumpsuit",
+   "name": "One-Piece Wonder",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/models/tint/jumpsuit.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Player-designed look: draw this, then multiply the chosen palette color through the matching .mask.png (see README).",
+   "file": "sprites/models/tint/jumpsuit.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "model-tint-mask",
+   "garment": "jumpsuit",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Alpha = how much of the palette color to apply at that pixel (garment fabric only; skin, hair, gold trim excluded).",
+   "file": "sprites/models/tint/jumpsuit.mask.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "garment",
+   "garment": "ball-gown",
+   "name": "Tulle Ball Gown",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/garments/ball-gown.mask.png",
+   "anchor": "top-center (neckline at y=10)",
+   "usage": "Garment alone (no body): sketchbook pages, shelf, cards, pattern preview. Tint with the mask.",
+   "file": "sprites/garments/ball-gown.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment-mask",
+   "garment": "ball-gown",
+   "color": null,
+   "anchor": "top-center",
+   "usage": "Tint mask for the garment sprite.",
+   "file": "sprites/garments/ball-gown.mask.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment",
+   "garment": "princess-gown",
+   "name": "Princess Gown",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/garments/princess-gown.mask.png",
+   "anchor": "top-center (neckline at y=10)",
+   "usage": "Garment alone (no body): sketchbook pages, shelf, cards, pattern preview. Tint with the mask.",
+   "file": "sprites/garments/princess-gown.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment-mask",
+   "garment": "princess-gown",
+   "color": null,
+   "anchor": "top-center",
+   "usage": "Tint mask for the garment sprite.",
+   "file": "sprites/garments/princess-gown.mask.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment",
+   "garment": "mermaid-gown",
+   "name": "Mermaid Gown",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/garments/mermaid-gown.mask.png",
+   "anchor": "top-center (neckline at y=10)",
+   "usage": "Garment alone (no body): sketchbook pages, shelf, cards, pattern preview. Tint with the mask.",
+   "file": "sprites/garments/mermaid-gown.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment-mask",
+   "garment": "mermaid-gown",
+   "color": null,
+   "anchor": "top-center",
+   "usage": "Tint mask for the garment sprite.",
+   "file": "sprites/garments/mermaid-gown.mask.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment",
+   "garment": "sunset-chiffon",
+   "name": "Sunset Chiffon",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/garments/sunset-chiffon.mask.png",
+   "anchor": "top-center (neckline at y=10)",
+   "usage": "Garment alone (no body): sketchbook pages, shelf, cards, pattern preview. Tint with the mask.",
+   "file": "sprites/garments/sunset-chiffon.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment-mask",
+   "garment": "sunset-chiffon",
+   "color": null,
+   "anchor": "top-center",
+   "usage": "Tint mask for the garment sprite.",
+   "file": "sprites/garments/sunset-chiffon.mask.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment",
+   "garment": "garden-roses",
+   "name": "Flower Garden Gown",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/garments/garden-roses.mask.png",
+   "anchor": "top-center (neckline at y=10)",
+   "usage": "Garment alone (no body): sketchbook pages, shelf, cards, pattern preview. Tint with the mask.",
+   "file": "sprites/garments/garden-roses.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment-mask",
+   "garment": "garden-roses",
+   "color": null,
+   "anchor": "top-center",
+   "usage": "Tint mask for the garment sprite.",
+   "file": "sprites/garments/garden-roses.mask.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment",
+   "garment": "starry-gown",
+   "name": "Starry Night Gown",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/garments/starry-gown.mask.png",
+   "anchor": "top-center (neckline at y=10)",
+   "usage": "Garment alone (no body): sketchbook pages, shelf, cards, pattern preview. Tint with the mask.",
+   "file": "sprites/garments/starry-gown.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment-mask",
+   "garment": "starry-gown",
+   "color": null,
+   "anchor": "top-center",
+   "usage": "Tint mask for the garment sprite.",
+   "file": "sprites/garments/starry-gown.mask.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment",
+   "garment": "butterfly-cape",
+   "name": "Butterfly Cape Dress",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/garments/butterfly-cape.mask.png",
+   "anchor": "top-center (neckline at y=10)",
+   "usage": "Garment alone (no body): sketchbook pages, shelf, cards, pattern preview. Tint with the mask.",
+   "file": "sprites/garments/butterfly-cape.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment-mask",
+   "garment": "butterfly-cape",
+   "color": null,
+   "anchor": "top-center",
+   "usage": "Tint mask for the garment sprite.",
+   "file": "sprites/garments/butterfly-cape.mask.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment",
+   "garment": "tiered-ruffle",
+   "name": "Ruffled Tier Gown",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/garments/tiered-ruffle.mask.png",
+   "anchor": "top-center (neckline at y=10)",
+   "usage": "Garment alone (no body): sketchbook pages, shelf, cards, pattern preview. Tint with the mask.",
+   "file": "sprites/garments/tiered-ruffle.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment-mask",
+   "garment": "tiered-ruffle",
+   "color": null,
+   "anchor": "top-center",
+   "usage": "Tint mask for the garment sprite.",
+   "file": "sprites/garments/tiered-ruffle.mask.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment",
+   "garment": "ice-crystal",
+   "name": "Ice Crystal Gown",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/garments/ice-crystal.mask.png",
+   "anchor": "top-center (neckline at y=10)",
+   "usage": "Garment alone (no body): sketchbook pages, shelf, cards, pattern preview. Tint with the mask.",
+   "file": "sprites/garments/ice-crystal.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment-mask",
+   "garment": "ice-crystal",
+   "color": null,
+   "anchor": "top-center",
+   "usage": "Tint mask for the garment sprite.",
+   "file": "sprites/garments/ice-crystal.mask.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment",
+   "garment": "candy-party",
+   "name": "Candy Party Dress",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/garments/candy-party.mask.png",
+   "anchor": "top-center (neckline at y=10)",
+   "usage": "Garment alone (no body): sketchbook pages, shelf, cards, pattern preview. Tint with the mask.",
+   "file": "sprites/garments/candy-party.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment-mask",
+   "garment": "candy-party",
+   "color": null,
+   "anchor": "top-center",
+   "usage": "Tint mask for the garment sprite.",
+   "file": "sprites/garments/candy-party.mask.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment",
+   "garment": "peacock-train",
+   "name": "Peacock Train",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/garments/peacock-train.mask.png",
+   "anchor": "top-center (neckline at y=10)",
+   "usage": "Garment alone (no body): sketchbook pages, shelf, cards, pattern preview. Tint with the mask.",
+   "file": "sprites/garments/peacock-train.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment-mask",
+   "garment": "peacock-train",
+   "color": null,
+   "anchor": "top-center",
+   "usage": "Tint mask for the garment sprite.",
+   "file": "sprites/garments/peacock-train.mask.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment",
+   "garment": "cherry-kimono",
+   "name": "Cherry Blossom Wrap",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/garments/cherry-kimono.mask.png",
+   "anchor": "top-center (neckline at y=10)",
+   "usage": "Garment alone (no body): sketchbook pages, shelf, cards, pattern preview. Tint with the mask.",
+   "file": "sprites/garments/cherry-kimono.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment-mask",
+   "garment": "cherry-kimono",
+   "color": null,
+   "anchor": "top-center",
+   "usage": "Tint mask for the garment sprite.",
+   "file": "sprites/garments/cherry-kimono.mask.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment",
+   "garment": "sunny-dress",
+   "name": "Sunny Dress",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/garments/sunny-dress.mask.png",
+   "anchor": "top-center (neckline at y=10)",
+   "usage": "Garment alone (no body): sketchbook pages, shelf, cards, pattern preview. Tint with the mask.",
+   "file": "sprites/garments/sunny-dress.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment-mask",
+   "garment": "sunny-dress",
+   "color": null,
+   "anchor": "top-center",
+   "usage": "Tint mask for the garment sprite.",
+   "file": "sprites/garments/sunny-dress.mask.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment",
+   "garment": "rain-coat",
+   "name": "Rain Coat",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/garments/rain-coat.mask.png",
+   "anchor": "top-center (neckline at y=10)",
+   "usage": "Garment alone (no body): sketchbook pages, shelf, cards, pattern preview. Tint with the mask.",
+   "file": "sprites/garments/rain-coat.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment-mask",
+   "garment": "rain-coat",
+   "color": null,
+   "anchor": "top-center",
+   "usage": "Tint mask for the garment sprite.",
+   "file": "sprites/garments/rain-coat.mask.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment",
+   "garment": "twirl-set",
+   "name": "Twirl Set",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/garments/twirl-set.mask.png",
+   "anchor": "top-center (neckline at y=10)",
+   "usage": "Garment alone (no body): sketchbook pages, shelf, cards, pattern preview. Tint with the mask.",
+   "file": "sprites/garments/twirl-set.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment-mask",
+   "garment": "twirl-set",
+   "color": null,
+   "anchor": "top-center",
+   "usage": "Tint mask for the garment sprite.",
+   "file": "sprites/garments/twirl-set.mask.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment",
+   "garment": "hero-cape",
+   "name": "Hero Cape",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/garments/hero-cape.mask.png",
+   "anchor": "top-center (neckline at y=10)",
+   "usage": "Garment alone (no body): sketchbook pages, shelf, cards, pattern preview. Tint with the mask.",
+   "file": "sprites/garments/hero-cape.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment-mask",
+   "garment": "hero-cape",
+   "color": null,
+   "anchor": "top-center",
+   "usage": "Tint mask for the garment sprite.",
+   "file": "sprites/garments/hero-cape.mask.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment",
+   "garment": "garden-gown",
+   "name": "Garden Gown",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/garments/garden-gown.mask.png",
+   "anchor": "top-center (neckline at y=10)",
+   "usage": "Garment alone (no body): sketchbook pages, shelf, cards, pattern preview. Tint with the mask.",
+   "file": "sprites/garments/garden-gown.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment-mask",
+   "garment": "garden-gown",
+   "color": null,
+   "anchor": "top-center",
+   "usage": "Tint mask for the garment sprite.",
+   "file": "sprites/garments/garden-gown.mask.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment",
+   "garment": "puff-pencil",
+   "name": "Puff & Pencil",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/garments/puff-pencil.mask.png",
+   "anchor": "top-center (neckline at y=10)",
+   "usage": "Garment alone (no body): sketchbook pages, shelf, cards, pattern preview. Tint with the mask.",
+   "file": "sprites/garments/puff-pencil.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment-mask",
+   "garment": "puff-pencil",
+   "color": null,
+   "anchor": "top-center",
+   "usage": "Tint mask for the garment sprite.",
+   "file": "sprites/garments/puff-pencil.mask.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment",
+   "garment": "palazzo",
+   "name": "Palazzo Day",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/garments/palazzo.mask.png",
+   "anchor": "top-center (neckline at y=10)",
+   "usage": "Garment alone (no body): sketchbook pages, shelf, cards, pattern preview. Tint with the mask.",
+   "file": "sprites/garments/palazzo.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment-mask",
+   "garment": "palazzo",
+   "color": null,
+   "anchor": "top-center",
+   "usage": "Tint mask for the garment sprite.",
+   "file": "sprites/garments/palazzo.mask.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment",
+   "garment": "crop-jacket",
+   "name": "Cropped Jacket",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/garments/crop-jacket.mask.png",
+   "anchor": "top-center (neckline at y=10)",
+   "usage": "Garment alone (no body): sketchbook pages, shelf, cards, pattern preview. Tint with the mask.",
+   "file": "sprites/garments/crop-jacket.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment-mask",
+   "garment": "crop-jacket",
+   "color": null,
+   "anchor": "top-center",
+   "usage": "Tint mask for the garment sprite.",
+   "file": "sprites/garments/crop-jacket.mask.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment",
+   "garment": "pleat-parade",
+   "name": "Pleat Parade",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/garments/pleat-parade.mask.png",
+   "anchor": "top-center (neckline at y=10)",
+   "usage": "Garment alone (no body): sketchbook pages, shelf, cards, pattern preview. Tint with the mask.",
+   "file": "sprites/garments/pleat-parade.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment-mask",
+   "garment": "pleat-parade",
+   "color": null,
+   "anchor": "top-center",
+   "usage": "Tint mask for the garment sprite.",
+   "file": "sprites/garments/pleat-parade.mask.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment",
+   "garment": "jumpsuit",
+   "name": "One-Piece Wonder",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/garments/jumpsuit.mask.png",
+   "anchor": "top-center (neckline at y=10)",
+   "usage": "Garment alone (no body): sketchbook pages, shelf, cards, pattern preview. Tint with the mask.",
+   "file": "sprites/garments/jumpsuit.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "garment-mask",
+   "garment": "jumpsuit",
+   "color": null,
+   "anchor": "top-center",
+   "usage": "Tint mask for the garment sprite.",
+   "file": "sprites/garments/jumpsuit.mask.png",
+   "size": [
+    256,
+    320
+   ]
+  },
+  {
+   "category": "dress-form",
+   "garment": null,
+   "state": "empty",
+   "color": "cream form, undyed muslin",
+   "tintable": false,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Generic studio sewing steps in undyed muslin (a toile/mock-up): empty form -> draped & pinned -> pattern pinned with tape -> half-sewn with needle -> finished simple dress. Not tintable (muslin is warm cream like the form); show the player color on the garment-specific forms/<garment>.png at the reveal.",
+   "file": "sprites/forms/form-empty.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form",
+   "garment": null,
+   "state": "draped-pinned",
+   "color": "cream form, undyed muslin",
+   "tintable": false,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Generic studio sewing steps in undyed muslin (a toile/mock-up): empty form -> draped & pinned -> pattern pinned with tape -> half-sewn with needle -> finished simple dress. Not tintable (muslin is warm cream like the form); show the player color on the garment-specific forms/<garment>.png at the reveal.",
+   "file": "sprites/forms/form-draped-pinned.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form",
+   "garment": null,
+   "state": "pattern-pinned",
+   "color": "cream form, undyed muslin",
+   "tintable": false,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Generic studio sewing steps in undyed muslin (a toile/mock-up): empty form -> draped & pinned -> pattern pinned with tape -> half-sewn with needle -> finished simple dress. Not tintable (muslin is warm cream like the form); show the player color on the garment-specific forms/<garment>.png at the reveal.",
+   "file": "sprites/forms/form-pattern-pinned.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form",
+   "garment": null,
+   "state": "half-sewn",
+   "color": "cream form, undyed muslin",
+   "tintable": false,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Generic studio sewing steps in undyed muslin (a toile/mock-up): empty form -> draped & pinned -> pattern pinned with tape -> half-sewn with needle -> finished simple dress. Not tintable (muslin is warm cream like the form); show the player color on the garment-specific forms/<garment>.png at the reveal.",
+   "file": "sprites/forms/form-half-sewn.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form",
+   "garment": null,
+   "state": "finished-simple",
+   "color": "cream form, undyed muslin",
+   "tintable": false,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Generic studio sewing steps in undyed muslin (a toile/mock-up): empty form -> draped & pinned -> pattern pinned with tape -> half-sewn with needle -> finished simple dress. Not tintable (muslin is warm cream like the form); show the player color on the garment-specific forms/<garment>.png at the reveal.",
+   "file": "sprites/forms/form-finished-simple.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form",
+   "garment": "ball-gown",
+   "name": "Tulle Ball Gown",
+   "state": "finished",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/forms/ball-gown.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Finished garment on the dress form (end of sewing / reveal). Tint with the mask.",
+   "file": "sprites/forms/ball-gown.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form-mask",
+   "garment": "ball-gown",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Tint mask.",
+   "file": "sprites/forms/ball-gown.mask.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form",
+   "garment": "princess-gown",
+   "name": "Princess Gown",
+   "state": "finished",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/forms/princess-gown.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Finished garment on the dress form (end of sewing / reveal). Tint with the mask.",
+   "file": "sprites/forms/princess-gown.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form-mask",
+   "garment": "princess-gown",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Tint mask.",
+   "file": "sprites/forms/princess-gown.mask.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form",
+   "garment": "mermaid-gown",
+   "name": "Mermaid Gown",
+   "state": "finished",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/forms/mermaid-gown.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Finished garment on the dress form (end of sewing / reveal). Tint with the mask.",
+   "file": "sprites/forms/mermaid-gown.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form-mask",
+   "garment": "mermaid-gown",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Tint mask.",
+   "file": "sprites/forms/mermaid-gown.mask.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form",
+   "garment": "sunset-chiffon",
+   "name": "Sunset Chiffon",
+   "state": "finished",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/forms/sunset-chiffon.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Finished garment on the dress form (end of sewing / reveal). Tint with the mask.",
+   "file": "sprites/forms/sunset-chiffon.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form-mask",
+   "garment": "sunset-chiffon",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Tint mask.",
+   "file": "sprites/forms/sunset-chiffon.mask.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form",
+   "garment": "garden-roses",
+   "name": "Flower Garden Gown",
+   "state": "finished",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/forms/garden-roses.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Finished garment on the dress form (end of sewing / reveal). Tint with the mask.",
+   "file": "sprites/forms/garden-roses.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form-mask",
+   "garment": "garden-roses",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Tint mask.",
+   "file": "sprites/forms/garden-roses.mask.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form",
+   "garment": "starry-gown",
+   "name": "Starry Night Gown",
+   "state": "finished",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/forms/starry-gown.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Finished garment on the dress form (end of sewing / reveal). Tint with the mask.",
+   "file": "sprites/forms/starry-gown.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form-mask",
+   "garment": "starry-gown",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Tint mask.",
+   "file": "sprites/forms/starry-gown.mask.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form",
+   "garment": "butterfly-cape",
+   "name": "Butterfly Cape Dress",
+   "state": "finished",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/forms/butterfly-cape.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Finished garment on the dress form (end of sewing / reveal). Tint with the mask.",
+   "file": "sprites/forms/butterfly-cape.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form-mask",
+   "garment": "butterfly-cape",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Tint mask.",
+   "file": "sprites/forms/butterfly-cape.mask.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form",
+   "garment": "tiered-ruffle",
+   "name": "Ruffled Tier Gown",
+   "state": "finished",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/forms/tiered-ruffle.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Finished garment on the dress form (end of sewing / reveal). Tint with the mask.",
+   "file": "sprites/forms/tiered-ruffle.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form-mask",
+   "garment": "tiered-ruffle",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Tint mask.",
+   "file": "sprites/forms/tiered-ruffle.mask.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form",
+   "garment": "ice-crystal",
+   "name": "Ice Crystal Gown",
+   "state": "finished",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/forms/ice-crystal.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Finished garment on the dress form (end of sewing / reveal). Tint with the mask.",
+   "file": "sprites/forms/ice-crystal.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form-mask",
+   "garment": "ice-crystal",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Tint mask.",
+   "file": "sprites/forms/ice-crystal.mask.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form",
+   "garment": "candy-party",
+   "name": "Candy Party Dress",
+   "state": "finished",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/forms/candy-party.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Finished garment on the dress form (end of sewing / reveal). Tint with the mask.",
+   "file": "sprites/forms/candy-party.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form-mask",
+   "garment": "candy-party",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Tint mask.",
+   "file": "sprites/forms/candy-party.mask.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form",
+   "garment": "peacock-train",
+   "name": "Peacock Train",
+   "state": "finished",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/forms/peacock-train.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Finished garment on the dress form (end of sewing / reveal). Tint with the mask.",
+   "file": "sprites/forms/peacock-train.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form-mask",
+   "garment": "peacock-train",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Tint mask.",
+   "file": "sprites/forms/peacock-train.mask.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form",
+   "garment": "cherry-kimono",
+   "name": "Cherry Blossom Wrap",
+   "state": "finished",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/forms/cherry-kimono.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Finished garment on the dress form (end of sewing / reveal). Tint with the mask.",
+   "file": "sprites/forms/cherry-kimono.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form-mask",
+   "garment": "cherry-kimono",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Tint mask.",
+   "file": "sprites/forms/cherry-kimono.mask.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form",
+   "garment": "sunny-dress",
+   "name": "Sunny Dress",
+   "state": "finished",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/forms/sunny-dress.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Finished garment on the dress form (end of sewing / reveal). Tint with the mask.",
+   "file": "sprites/forms/sunny-dress.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form-mask",
+   "garment": "sunny-dress",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Tint mask.",
+   "file": "sprites/forms/sunny-dress.mask.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form",
+   "garment": "rain-coat",
+   "name": "Rain Coat",
+   "state": "finished",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/forms/rain-coat.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Finished garment on the dress form (end of sewing / reveal). Tint with the mask.",
+   "file": "sprites/forms/rain-coat.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form-mask",
+   "garment": "rain-coat",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Tint mask.",
+   "file": "sprites/forms/rain-coat.mask.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form",
+   "garment": "twirl-set",
+   "name": "Twirl Set",
+   "state": "finished",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/forms/twirl-set.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Finished garment on the dress form (end of sewing / reveal). Tint with the mask.",
+   "file": "sprites/forms/twirl-set.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form-mask",
+   "garment": "twirl-set",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Tint mask.",
+   "file": "sprites/forms/twirl-set.mask.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form",
+   "garment": "hero-cape",
+   "name": "Hero Cape",
+   "state": "finished",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/forms/hero-cape.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Finished garment on the dress form (end of sewing / reveal). Tint with the mask.",
+   "file": "sprites/forms/hero-cape.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form-mask",
+   "garment": "hero-cape",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Tint mask.",
+   "file": "sprites/forms/hero-cape.mask.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form",
+   "garment": "garden-gown",
+   "name": "Garden Gown",
+   "state": "finished",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/forms/garden-gown.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Finished garment on the dress form (end of sewing / reveal). Tint with the mask.",
+   "file": "sprites/forms/garden-gown.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form-mask",
+   "garment": "garden-gown",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Tint mask.",
+   "file": "sprites/forms/garden-gown.mask.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form",
+   "garment": "puff-pencil",
+   "name": "Puff & Pencil",
+   "state": "finished",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/forms/puff-pencil.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Finished garment on the dress form (end of sewing / reveal). Tint with the mask.",
+   "file": "sprites/forms/puff-pencil.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form-mask",
+   "garment": "puff-pencil",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Tint mask.",
+   "file": "sprites/forms/puff-pencil.mask.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form",
+   "garment": "palazzo",
+   "name": "Palazzo Day",
+   "state": "finished",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/forms/palazzo.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Finished garment on the dress form (end of sewing / reveal). Tint with the mask.",
+   "file": "sprites/forms/palazzo.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form-mask",
+   "garment": "palazzo",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Tint mask.",
+   "file": "sprites/forms/palazzo.mask.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form",
+   "garment": "crop-jacket",
+   "name": "Cropped Jacket",
+   "state": "finished",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/forms/crop-jacket.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Finished garment on the dress form (end of sewing / reveal). Tint with the mask.",
+   "file": "sprites/forms/crop-jacket.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form-mask",
+   "garment": "crop-jacket",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Tint mask.",
+   "file": "sprites/forms/crop-jacket.mask.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form",
+   "garment": "pleat-parade",
+   "name": "Pleat Parade",
+   "state": "finished",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/forms/pleat-parade.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Finished garment on the dress form (end of sewing / reveal). Tint with the mask.",
+   "file": "sprites/forms/pleat-parade.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form-mask",
+   "garment": "pleat-parade",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Tint mask.",
+   "file": "sprites/forms/pleat-parade.mask.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form",
+   "garment": "jumpsuit",
+   "name": "One-Piece Wonder",
+   "state": "finished",
+   "color": "white (tint base)",
+   "tintable": true,
+   "mask": "sprites/forms/jumpsuit.mask.png",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Finished garment on the dress form (end of sewing / reveal). Tint with the mask.",
+   "file": "sprites/forms/jumpsuit.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "dress-form-mask",
+   "garment": "jumpsuit",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Tint mask.",
+   "file": "sprites/forms/jumpsuit.mask.png",
+   "size": [
+    240,
+    352
+   ]
+  },
+  {
+   "category": "customer-full",
+   "customer": "lila",
+   "name": "Lila (puffs, pink tee dress)",
+   "color": "street clothes",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Customer walking in / standing at the counter.",
+   "file": "sprites/customers/full/lila.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "customer-full",
+   "customer": "theo",
+   "name": "Theo (glasses, teal hoodie)",
+   "color": "street clothes",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Customer walking in / standing at the counter.",
+   "file": "sprites/customers/full/theo.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "customer-full",
+   "customer": "noor",
+   "name": "Noor (green hijab, magenta dress)",
+   "color": "street clothes",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Customer walking in / standing at the counter.",
+   "file": "sprites/customers/full/noor.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "customer-full",
+   "customer": "jo",
+   "name": "Jo (locs, yellow tee, plum pants)",
+   "color": "street clothes",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Customer walking in / standing at the counter.",
+   "file": "sprites/customers/full/jo.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "customer-full",
+   "customer": "amos",
+   "name": "Amos (ponytail, cream shirt, navy)",
+   "color": "street clothes",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Customer walking in / standing at the counter.",
+   "file": "sprites/customers/full/amos.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "customer-full",
+   "customer": "bea",
+   "name": "Bea (blonde bun, purple dress, butter cardigan)",
+   "color": "street clothes",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Customer walking in / standing at the counter.",
+   "file": "sprites/customers/full/bea.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "customer-full",
+   "customer": "rio",
+   "name": "Rio (auburn curls, freckles, orange dress)",
+   "color": "street clothes",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Customer walking in / standing at the counter.",
+   "file": "sprites/customers/full/rio.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "customer-full",
+   "customer": "sasha",
+   "name": "Sasha (braid, cream sweater, teal skirt)",
+   "color": "street clothes",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Customer walking in / standing at the counter.",
+   "file": "sprites/customers/full/sasha.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "customer-full",
+   "customer": "jules",
+   "name": "Jules (beret, show host with mic)",
+   "color": "street clothes",
+   "anchor": "bottom-center",
+   "baseline_y": 346,
+   "usage": "Customer walking in / standing at the counter.",
+   "file": "sprites/customers/full/jules.png",
+   "size": [
+    256,
+    352
+   ]
+  },
+  {
+   "category": "customer-bust",
+   "customer": "lila",
+   "expression": "happy",
+   "color": null,
+   "anchor": "bottom-center (chest cut line at y=250)",
+   "baseline_y": 250,
+   "usage": "Reaction portrait: happy=good match, love=great match/secret wish, thinking=close, disappointed=off.",
+   "file": "sprites/customers/bust/lila-happy.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "customer-bust",
+   "customer": "lila",
+   "expression": "love",
+   "color": null,
+   "anchor": "bottom-center (chest cut line at y=250)",
+   "baseline_y": 250,
+   "usage": "Reaction portrait: happy=good match, love=great match/secret wish, thinking=close, disappointed=off.",
+   "file": "sprites/customers/bust/lila-love.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "customer-bust",
+   "customer": "lila",
+   "expression": "thinking",
+   "color": null,
+   "anchor": "bottom-center (chest cut line at y=250)",
+   "baseline_y": 250,
+   "usage": "Reaction portrait: happy=good match, love=great match/secret wish, thinking=close, disappointed=off.",
+   "file": "sprites/customers/bust/lila-thinking.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "customer-bust",
+   "customer": "lila",
+   "expression": "disappointed",
+   "color": null,
+   "anchor": "bottom-center (chest cut line at y=250)",
+   "baseline_y": 250,
+   "usage": "Reaction portrait: happy=good match, love=great match/secret wish, thinking=close, disappointed=off.",
+   "file": "sprites/customers/bust/lila-disappointed.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "customer-bust",
+   "customer": "theo",
+   "expression": "happy",
+   "color": null,
+   "anchor": "bottom-center (chest cut line at y=250)",
+   "baseline_y": 250,
+   "usage": "Reaction portrait: happy=good match, love=great match/secret wish, thinking=close, disappointed=off.",
+   "file": "sprites/customers/bust/theo-happy.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "customer-bust",
+   "customer": "theo",
+   "expression": "love",
+   "color": null,
+   "anchor": "bottom-center (chest cut line at y=250)",
+   "baseline_y": 250,
+   "usage": "Reaction portrait: happy=good match, love=great match/secret wish, thinking=close, disappointed=off.",
+   "file": "sprites/customers/bust/theo-love.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "customer-bust",
+   "customer": "theo",
+   "expression": "thinking",
+   "color": null,
+   "anchor": "bottom-center (chest cut line at y=250)",
+   "baseline_y": 250,
+   "usage": "Reaction portrait: happy=good match, love=great match/secret wish, thinking=close, disappointed=off.",
+   "file": "sprites/customers/bust/theo-thinking.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "customer-bust",
+   "customer": "theo",
+   "expression": "disappointed",
+   "color": null,
+   "anchor": "bottom-center (chest cut line at y=250)",
+   "baseline_y": 250,
+   "usage": "Reaction portrait: happy=good match, love=great match/secret wish, thinking=close, disappointed=off.",
+   "file": "sprites/customers/bust/theo-disappointed.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "customer-bust",
+   "customer": "noor",
+   "expression": "happy",
+   "color": null,
+   "anchor": "bottom-center (chest cut line at y=250)",
+   "baseline_y": 250,
+   "usage": "Reaction portrait: happy=good match, love=great match/secret wish, thinking=close, disappointed=off.",
+   "file": "sprites/customers/bust/noor-happy.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "customer-bust",
+   "customer": "noor",
+   "expression": "love",
+   "color": null,
+   "anchor": "bottom-center (chest cut line at y=250)",
+   "baseline_y": 250,
+   "usage": "Reaction portrait: happy=good match, love=great match/secret wish, thinking=close, disappointed=off.",
+   "file": "sprites/customers/bust/noor-love.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "customer-bust",
+   "customer": "noor",
+   "expression": "thinking",
+   "color": null,
+   "anchor": "bottom-center (chest cut line at y=250)",
+   "baseline_y": 250,
+   "usage": "Reaction portrait: happy=good match, love=great match/secret wish, thinking=close, disappointed=off.",
+   "file": "sprites/customers/bust/noor-thinking.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "customer-bust",
+   "customer": "noor",
+   "expression": "disappointed",
+   "color": null,
+   "anchor": "bottom-center (chest cut line at y=250)",
+   "baseline_y": 250,
+   "usage": "Reaction portrait: happy=good match, love=great match/secret wish, thinking=close, disappointed=off.",
+   "file": "sprites/customers/bust/noor-disappointed.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "customer-bust",
+   "customer": "jo",
+   "expression": "happy",
+   "color": null,
+   "anchor": "bottom-center (chest cut line at y=250)",
+   "baseline_y": 250,
+   "usage": "Reaction portrait: happy=good match, love=great match/secret wish, thinking=close, disappointed=off.",
+   "file": "sprites/customers/bust/jo-happy.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "customer-bust",
+   "customer": "jo",
+   "expression": "love",
+   "color": null,
+   "anchor": "bottom-center (chest cut line at y=250)",
+   "baseline_y": 250,
+   "usage": "Reaction portrait: happy=good match, love=great match/secret wish, thinking=close, disappointed=off.",
+   "file": "sprites/customers/bust/jo-love.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "customer-bust",
+   "customer": "jo",
+   "expression": "thinking",
+   "color": null,
+   "anchor": "bottom-center (chest cut line at y=250)",
+   "baseline_y": 250,
+   "usage": "Reaction portrait: happy=good match, love=great match/secret wish, thinking=close, disappointed=off.",
+   "file": "sprites/customers/bust/jo-thinking.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "customer-bust",
+   "customer": "jo",
+   "expression": "disappointed",
+   "color": null,
+   "anchor": "bottom-center (chest cut line at y=250)",
+   "baseline_y": 250,
+   "usage": "Reaction portrait: happy=good match, love=great match/secret wish, thinking=close, disappointed=off.",
+   "file": "sprites/customers/bust/jo-disappointed.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "customer-bust",
+   "customer": "amos",
+   "expression": "happy",
+   "color": null,
+   "anchor": "bottom-center (chest cut line at y=250)",
+   "baseline_y": 250,
+   "usage": "Reaction portrait: happy=good match, love=great match/secret wish, thinking=close, disappointed=off.",
+   "file": "sprites/customers/bust/amos-happy.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "customer-bust",
+   "customer": "amos",
+   "expression": "love",
+   "color": null,
+   "anchor": "bottom-center (chest cut line at y=250)",
+   "baseline_y": 250,
+   "usage": "Reaction portrait: happy=good match, love=great match/secret wish, thinking=close, disappointed=off.",
+   "file": "sprites/customers/bust/amos-love.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "customer-bust",
+   "customer": "amos",
+   "expression": "thinking",
+   "color": null,
+   "anchor": "bottom-center (chest cut line at y=250)",
+   "baseline_y": 250,
+   "usage": "Reaction portrait: happy=good match, love=great match/secret wish, thinking=close, disappointed=off.",
+   "file": "sprites/customers/bust/amos-thinking.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "customer-bust",
+   "customer": "amos",
+   "expression": "disappointed",
+   "color": null,
+   "anchor": "bottom-center (chest cut line at y=250)",
+   "baseline_y": 250,
+   "usage": "Reaction portrait: happy=good match, love=great match/secret wish, thinking=close, disappointed=off.",
+   "file": "sprites/customers/bust/amos-disappointed.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "customer-bust",
+   "customer": "bea",
+   "expression": "happy",
+   "color": null,
+   "anchor": "bottom-center (chest cut line at y=250)",
+   "baseline_y": 250,
+   "usage": "Reaction portrait: happy=good match, love=great match/secret wish, thinking=close, disappointed=off.",
+   "file": "sprites/customers/bust/bea-happy.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "customer-bust",
+   "customer": "bea",
+   "expression": "love",
+   "color": null,
+   "anchor": "bottom-center (chest cut line at y=250)",
+   "baseline_y": 250,
+   "usage": "Reaction portrait: happy=good match, love=great match/secret wish, thinking=close, disappointed=off.",
+   "file": "sprites/customers/bust/bea-love.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "customer-bust",
+   "customer": "bea",
+   "expression": "thinking",
+   "color": null,
+   "anchor": "bottom-center (chest cut line at y=250)",
+   "baseline_y": 250,
+   "usage": "Reaction portrait: happy=good match, love=great match/secret wish, thinking=close, disappointed=off.",
+   "file": "sprites/customers/bust/bea-thinking.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "customer-bust",
+   "customer": "bea",
+   "expression": "disappointed",
+   "color": null,
+   "anchor": "bottom-center (chest cut line at y=250)",
+   "baseline_y": 250,
+   "usage": "Reaction portrait: happy=good match, love=great match/secret wish, thinking=close, disappointed=off.",
+   "file": "sprites/customers/bust/bea-disappointed.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "customer-bust",
+   "customer": "rio",
+   "expression": "happy",
+   "color": null,
+   "anchor": "bottom-center (chest cut line at y=250)",
+   "baseline_y": 250,
+   "usage": "Reaction portrait: happy=good match, love=great match/secret wish, thinking=close, disappointed=off.",
+   "file": "sprites/customers/bust/rio-happy.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "customer-bust",
+   "customer": "rio",
+   "expression": "love",
+   "color": null,
+   "anchor": "bottom-center (chest cut line at y=250)",
+   "baseline_y": 250,
+   "usage": "Reaction portrait: happy=good match, love=great match/secret wish, thinking=close, disappointed=off.",
+   "file": "sprites/customers/bust/rio-love.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "customer-bust",
+   "customer": "rio",
+   "expression": "thinking",
+   "color": null,
+   "anchor": "bottom-center (chest cut line at y=250)",
+   "baseline_y": 250,
+   "usage": "Reaction portrait: happy=good match, love=great match/secret wish, thinking=close, disappointed=off.",
+   "file": "sprites/customers/bust/rio-thinking.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "customer-bust",
+   "customer": "rio",
+   "expression": "disappointed",
+   "color": null,
+   "anchor": "bottom-center (chest cut line at y=250)",
+   "baseline_y": 250,
+   "usage": "Reaction portrait: happy=good match, love=great match/secret wish, thinking=close, disappointed=off.",
+   "file": "sprites/customers/bust/rio-disappointed.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "customer-bust",
+   "customer": "sasha",
+   "expression": "happy",
+   "color": null,
+   "anchor": "bottom-center (chest cut line at y=250)",
+   "baseline_y": 250,
+   "usage": "Reaction portrait: happy=good match, love=great match/secret wish, thinking=close, disappointed=off.",
+   "file": "sprites/customers/bust/sasha-happy.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "customer-bust",
+   "customer": "sasha",
+   "expression": "love",
+   "color": null,
+   "anchor": "bottom-center (chest cut line at y=250)",
+   "baseline_y": 250,
+   "usage": "Reaction portrait: happy=good match, love=great match/secret wish, thinking=close, disappointed=off.",
+   "file": "sprites/customers/bust/sasha-love.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "customer-bust",
+   "customer": "sasha",
+   "expression": "thinking",
+   "color": null,
+   "anchor": "bottom-center (chest cut line at y=250)",
+   "baseline_y": 250,
+   "usage": "Reaction portrait: happy=good match, love=great match/secret wish, thinking=close, disappointed=off.",
+   "file": "sprites/customers/bust/sasha-thinking.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "customer-bust",
+   "customer": "sasha",
+   "expression": "disappointed",
+   "color": null,
+   "anchor": "bottom-center (chest cut line at y=250)",
+   "baseline_y": 250,
+   "usage": "Reaction portrait: happy=good match, love=great match/secret wish, thinking=close, disappointed=off.",
+   "file": "sprites/customers/bust/sasha-disappointed.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "customer-bust",
+   "customer": "jules",
+   "expression": "happy",
+   "color": null,
+   "anchor": "bottom-center (chest cut line at y=250)",
+   "baseline_y": 250,
+   "usage": "Reaction portrait: happy=good match, love=great match/secret wish, thinking=close, disappointed=off.",
+   "file": "sprites/customers/bust/jules-happy.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "customer-bust",
+   "customer": "jules",
+   "expression": "love",
+   "color": null,
+   "anchor": "bottom-center (chest cut line at y=250)",
+   "baseline_y": 250,
+   "usage": "Reaction portrait: happy=good match, love=great match/secret wish, thinking=close, disappointed=off.",
+   "file": "sprites/customers/bust/jules-love.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "customer-bust",
+   "customer": "jules",
+   "expression": "thinking",
+   "color": null,
+   "anchor": "bottom-center (chest cut line at y=250)",
+   "baseline_y": 250,
+   "usage": "Reaction portrait: happy=good match, love=great match/secret wish, thinking=close, disappointed=off.",
+   "file": "sprites/customers/bust/jules-thinking.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "customer-bust",
+   "customer": "jules",
+   "expression": "disappointed",
+   "color": null,
+   "anchor": "bottom-center (chest cut line at y=250)",
+   "baseline_y": 250,
+   "usage": "Reaction portrait: happy=good match, love=great match/secret wish, thinking=close, disappointed=off.",
+   "file": "sprites/customers/bust/jules-disappointed.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "pip",
+   "expression": "happy",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 186,
+   "usage": "Pip the tomato-pincushion helper, next to hint text.",
+   "file": "sprites/pip/pip-happy.png",
+   "size": [
+    192,
+    192
+   ]
+  },
+  {
+   "category": "pip",
+   "expression": "love",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 186,
+   "usage": "Pip the tomato-pincushion helper, next to hint text.",
+   "file": "sprites/pip/pip-love.png",
+   "size": [
+    192,
+    192
+   ]
+  },
+  {
+   "category": "pip",
+   "expression": "thinking",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 186,
+   "usage": "Pip the tomato-pincushion helper, next to hint text.",
+   "file": "sprites/pip/pip-thinking.png",
+   "size": [
+    192,
+    192
+   ]
+  },
+  {
+   "category": "pip",
+   "expression": "disappointed",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 186,
+   "usage": "Pip the tomato-pincushion helper, next to hint text.",
+   "file": "sprites/pip/pip-disappointed.png",
+   "size": [
+    192,
+    192
+   ]
+  },
+  {
+   "category": "pip",
+   "expression": "surprised",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 186,
+   "usage": "Pip the tomato-pincushion helper, next to hint text.",
+   "file": "sprites/pip/pip-surprised.png",
+   "size": [
+    192,
+    192
+   ]
+  },
+  {
+   "category": "pip",
+   "expression": "cheer",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 186,
+   "usage": "Pip the tomato-pincushion helper, next to hint text.",
+   "file": "sprites/pip/pip-cheer.png",
+   "size": [
+    192,
+    192
+   ]
+  },
+  {
+   "category": "runway",
+   "id": "photographer-kneel",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 282,
+   "usage": "Photographer at the runway edge (flip horizontally for the other side).",
+   "file": "sprites/runway/photographer-kneel.png",
+   "size": [
+    256,
+    288
+   ]
+  },
+  {
+   "category": "runway",
+   "id": "photographer-stand",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 282,
+   "usage": "Standing photographer.",
+   "file": "sprites/runway/photographer-stand.png",
+   "size": [
+    256,
+    288
+   ]
+  },
+  {
+   "category": "runway",
+   "id": "fx-flash",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 186,
+   "usage": "Camera flash burst; scale/fade in for a flash beat.",
+   "file": "sprites/runway/fx-flash.png",
+   "size": [
+    192,
+    192
+   ]
+  },
+  {
+   "category": "runway",
+   "id": "trophy",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 186,
+   "usage": "Award / win card.",
+   "file": "sprites/runway/trophy.png",
+   "size": [
+    192,
+    192
+   ]
+  },
+  {
+   "category": "runway-crowd",
+   "id": "crowd-girl-clap",
+   "color": null,
+   "anchor": "bottom-center (chest cut line)",
+   "baseline_y": 218,
+   "usage": "Audience bust for the runway front row; bob 2-4px for cheering.",
+   "file": "sprites/runway/crowd-girl-clap.png",
+   "size": [
+    224,
+    224
+   ]
+  },
+  {
+   "category": "runway-crowd",
+   "id": "crowd-boy-cheer",
+   "color": null,
+   "anchor": "bottom-center (chest cut line)",
+   "baseline_y": 218,
+   "usage": "Audience bust for the runway front row; bob 2-4px for cheering.",
+   "file": "sprites/runway/crowd-boy-cheer.png",
+   "size": [
+    224,
+    224
+   ]
+  },
+  {
+   "category": "runway-crowd",
+   "id": "crowd-grandma",
+   "color": null,
+   "anchor": "bottom-center (chest cut line)",
+   "baseline_y": 218,
+   "usage": "Audience bust for the runway front row; bob 2-4px for cheering.",
+   "file": "sprites/runway/crowd-grandma.png",
+   "size": [
+    224,
+    224
+   ]
+  },
+  {
+   "category": "runway-crowd",
+   "id": "crowd-kid-lightstick",
+   "color": null,
+   "anchor": "bottom-center (chest cut line)",
+   "baseline_y": 218,
+   "usage": "Audience bust for the runway front row; bob 2-4px for cheering.",
+   "file": "sprites/runway/crowd-kid-lightstick.png",
+   "size": [
+    224,
+    224
+   ]
+  },
+  {
+   "category": "runway-crowd",
+   "id": "crowd-girl-hearteyes",
+   "color": null,
+   "anchor": "bottom-center (chest cut line)",
+   "baseline_y": 218,
+   "usage": "Audience bust for the runway front row; bob 2-4px for cheering.",
+   "file": "sprites/runway/crowd-girl-hearteyes.png",
+   "size": [
+    224,
+    224
+   ]
+  },
+  {
+   "category": "runway-crowd",
+   "id": "crowd-boy-wave",
+   "color": null,
+   "anchor": "bottom-center (chest cut line)",
+   "baseline_y": 218,
+   "usage": "Audience bust for the runway front row; bob 2-4px for cheering.",
+   "file": "sprites/runway/crowd-boy-wave.png",
+   "size": [
+    224,
+    224
+   ]
+  },
+  {
+   "category": "runway-crowd",
+   "id": "crowd-teen-phone",
+   "color": null,
+   "anchor": "bottom-center (chest cut line)",
+   "baseline_y": 218,
+   "usage": "Audience bust for the runway front row; bob 2-4px for cheering.",
+   "file": "sprites/runway/crowd-teen-phone.png",
+   "size": [
+    224,
+    224
+   ]
+  },
+  {
+   "category": "runway-crowd",
+   "id": "crowd-dad-clap",
+   "color": null,
+   "anchor": "bottom-center (chest cut line)",
+   "baseline_y": 218,
+   "usage": "Audience bust for the runway front row; bob 2-4px for cheering.",
+   "file": "sprites/runway/crowd-dad-clap.png",
+   "size": [
+    224,
+    224
+   ]
+  },
+  {
+   "category": "prop",
+   "id": "clothes-rack",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 250,
+   "usage": "Shop decor.",
+   "file": "sprites/props/clothes-rack.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "prop",
+   "id": "mirror",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 250,
+   "usage": "Shop decor.",
+   "file": "sprites/props/mirror.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "prop",
+   "id": "sewing-machine",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 250,
+   "usage": "Shop decor.",
+   "file": "sprites/props/sewing-machine.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "prop",
+   "id": "fabric-bolts",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 250,
+   "usage": "Shop decor.",
+   "file": "sprites/props/fabric-bolts.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "prop",
+   "id": "pincushion-kit",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 250,
+   "usage": "Shop decor.",
+   "file": "sprites/props/pincushion-kit.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "prop",
+   "id": "plant-monstera",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 250,
+   "usage": "Shop decor (flowers-pot fits the \"Window flowers\" decor item).",
+   "file": "sprites/props/plant-monstera.png",
+   "size": [
+    256,
+    256
+   ]
+  },
+  {
+   "category": "prop",
+   "id": "flowers-pot",
+   "color": null,
+   "anchor": "bottom-center",
+   "baseline_y": 250,
+   "usage": "Shop decor (flowers-pot fits the \"Window flowers\" decor item).",
+   "file": "sprites/props/flowers-pot.png",
+   "size": [
+    256,
+    256
+   ]
+  }
+ ]
+}
