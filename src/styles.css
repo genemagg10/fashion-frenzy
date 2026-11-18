@@ -495,8 +495,8 @@ h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); line-height: 1.05; }
 .crowd-left { left: 1%; }
 .crowd-right { right: 1%; flex-direction: row-reverse; }
 .fan {
-  width: 36px;
-  height: 54px;
+  width: 44px;
+  height: 64px;
   position: relative;
   animation: bob 1.1s ease-in-out infinite;
   animation-delay: calc(var(--i) * 0.12s);
@@ -522,38 +522,18 @@ h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); line-height: 1.05; }
   border-radius: 12px 12px 6px 6px;
   background: var(--shirt);
 }
-.runway.cheering .fan { animation-duration: 0.28s; }
+.runway.cheering .fan { animation: cheer 0.34s ease-in-out infinite; }
 .photog {
   position: absolute;
-  bottom: 16%;
-  z-index: 4;
-  width: 64px;
-  height: 86px;
+  bottom: 12%;
+  z-index: 5;
+  width: min(150px, 28vw);
+  height: auto;
 }
-.photog.left { left: 4%; }
-.photog.right { right: 4%; }
-.photog::before {
-  content: '';
-  position: absolute;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: #f3c6a5;
-  left: 10px;
-  top: 0;
-  box-shadow: 0 28px 0 6px #24315c;
-}
-.photog::after {
-  content: '';
-  position: absolute;
-  width: 18px;
-  height: 12px;
-  background: #1a120e;
-  border-radius: 2px;
-  top: 18px;
-  left: 28px;
-  box-shadow: 0 0 0 3px #f2c14e, 0 0 12px 4px rgba(255, 244, 200, 0.8);
-}
+.photog svg { width: 100%; height: auto; display: block; }
+.photog.left { left: 1%; animation: photog 1.6s ease-in-out infinite; }
+.photog.right { right: 1%; animation: photog 1.6s ease-in-out infinite reverse; }
+.photog .flash { transform-box: fill-box; transform-origin: center; animation: flashpop 1.1s ease-in-out infinite; }
 .ella-banner {
   position: absolute;
   top: 18%;
@@ -688,11 +668,12 @@ h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); line-height: 1.05; }
 .pose-cheer .arm.left, .pose-cheer .arm.right, .pose-stride .leg, .pose-stride .arm, .flare {
   transform-box: view-box;
 }
-.pose-stride .leg.left { animation: stride 0.46s ease-in-out infinite; }
-.pose-stride .leg.right { animation: stride 0.46s ease-in-out infinite reverse; }
-.pose-stride .arm.left { animation: swing 0.46s ease-in-out infinite; }
-.pose-stride .arm.right { animation: swing 0.46s ease-in-out infinite reverse; }
-.pose-stride .hip { transform-box: view-box; transform-origin: 120px 260px; animation: hips 0.46s ease-in-out infinite; }
+.hem-long .legs { visibility: hidden; }
+.pose-stride .leg.left { animation: stride 0.7s ease-in-out infinite; }
+.pose-stride .leg.right { animation: stride 0.7s ease-in-out infinite reverse; }
+.pose-stride .arm.left { animation: swing 0.7s ease-in-out infinite; }
+.pose-stride .arm.right { animation: swing 0.7s ease-in-out infinite reverse; }
+.pose-stride .hip { transform-box: view-box; transform-origin: 120px 260px; animation: hips 0.7s ease-in-out infinite; }
 .pose-finale { transform-box: view-box; transform-origin: 120px 480px; animation: poseHold 0.6s ease forwards; }
 .pose-cheer .arm.left { transform: rotate(-24deg); }
 .pose-cheer .arm.right { transform: rotate(24deg); }
@@ -716,9 +697,12 @@ h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); line-height: 1.05; }
 @keyframes sway { 0%, 100% { transform: rotate(-1.2deg); } 50% { transform: rotate(1.4deg); } }
 @keyframes twirl { 0% { transform: rotate(0); } 40% { transform: rotate(8deg) scale(1.03); } 100% { transform: rotate(-4deg); } }
 @keyframes flare { 50% { transform: scaleX(1.12); } }
-@keyframes stride { 0%, 100% { transform: rotate(24deg); } 50% { transform: rotate(-22deg); } }
-@keyframes swing { 0%, 100% { transform: rotate(-18deg); } 50% { transform: rotate(20deg); } }
-@keyframes hips { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
+@keyframes stride { 0%, 100% { transform: rotate(8deg); } 50% { transform: rotate(-7deg); } }
+@keyframes swing { 0%, 100% { transform: rotate(12deg); } 50% { transform: rotate(-14deg); } }
+@keyframes hips { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3.5deg); } }
+@keyframes cheer { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-12px) rotate(-4deg); } }
+@keyframes photog { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-6px) rotate(-2deg); } }
+@keyframes flashpop { 0%, 70%, 100% { opacity: 0.35; } 78%, 88% { opacity: 1; } }
 @keyframes poseHold { to { transform: rotate(-8deg); } }
 .lid { display: none; }
 @keyframes blink { 0%, 88%, 100% { transform: scaleY(0.05); } 93%, 96% { transform: scaleY(1); } }

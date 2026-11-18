@@ -58,6 +58,10 @@ function hairBack(look: PersonLook): string {
       s += `<circle cx="90" cy="286" r="8" fill="${darken(c, 0.15)}"/>`;
       return s;
     }
+    case 'pony':
+      return `<path d="M84 100 C76 64 100 46 120 44 C150 46 166 70 158 104 C146 78 94 78 84 100 Z" fill="${c}"/>
+        <path d="M128 70 C150 60 168 78 160 108 C148 130 136 150 132 180 C126 150 122 120 128 70 Z" fill="${c}"/>
+        <circle cx="138" cy="188" r="8" fill="${c}"/>`;
     case 'hijab':
       return `<path d="M70 112 C64 58 176 54 172 112 C186 160 184 214 150 230 L120 206 L90 230 C58 214 54 160 70 112 Z" fill="${c}"/>`;
     default:
@@ -65,23 +69,46 @@ function hairBack(look: PersonLook): string {
   }
 }
 
+function scalp(c: string): string {
+  return `<path d="M78 100 C70 64 84 42 120 38 C156 42 170 64 162 100 C150 76 90 76 78 100 Z" fill="${c}"/>`;
+}
+
 function hairFront(look: PersonLook): string {
   const c = look.hairColor;
-  if (look.hair === 'bob') {
-    return `<path d="M86 78 Q120 62 154 78 Q148 92 120 90 Q92 92 86 78 Z" fill="${c}"/>`;
-  }
   if (look.hair === 'hijab') {
     return `<path d="M82 90 Q120 68 158 90 Q150 108 120 104 Q90 108 82 90 Z" fill="${c}"/>
       <path d="M78 118 Q70 150 86 176" fill="none" stroke="${darken(c, 0.15)}" stroke-width="8" stroke-linecap="round"/>
       <path d="M162 118 Q170 150 154 176" fill="none" stroke="${darken(c, 0.15)}" stroke-width="8" stroke-linecap="round"/>`;
   }
+  const cap = scalp(c);
+  if (look.hair === 'bob') {
+    return `${cap}<path d="M84 86 Q120 74 156 86 Q146 102 120 98 Q94 102 84 86 Z" fill="${c}"/>`;
+  }
   if (look.hair === 'curls') {
-    return `<circle cx="92" cy="78" r="10" fill="${c}"/><circle cx="148" cy="78" r="10" fill="${c}"/><circle cx="120" cy="70" r="9" fill="${c}"/>`;
+    return `${cap}<circle cx="86" cy="78" r="12" fill="${c}"/><circle cx="154" cy="78" r="12" fill="${c}"/><circle cx="120" cy="62" r="11" fill="${c}"/><circle cx="102" cy="70" r="9" fill="${c}"/><circle cx="140" cy="68" r="9" fill="${c}"/>`;
   }
   if (look.hair === 'waves') {
-    return `<path d="M94 76 Q120 64 146 78 Q136 90 120 86 Q104 90 94 76 Z" fill="${c}"/>`;
+    return `${cap}<path d="M88 84 Q120 68 152 84 Q138 98 120 94 Q100 98 88 84 Z" fill="${c}"/>`;
   }
-  return '';
+  if (look.hair === 'puffs') {
+    return `${cap}<circle cx="76" cy="70" r="24" fill="${c}"/><circle cx="164" cy="70" r="24" fill="${c}"/>
+      <ellipse cx="76" cy="62" rx="8" ry="5" fill="#fff" opacity="0.18"/>
+      <ellipse cx="164" cy="62" rx="8" ry="5" fill="#fff" opacity="0.18"/>`;
+  }
+  if (look.hair === 'pony') {
+    return `${cap}<path d="M132 58 C156 48 176 70 166 104 C152 128 140 156 134 186 C128 150 124 110 132 58 Z" fill="${c}"/>
+      <circle cx="140" cy="194" r="9" fill="${darken(c, 0.12)}"/>`;
+  }
+  if (look.hair === 'bun') {
+    return `${cap}<circle cx="120" cy="36" r="16" fill="${c}"/><ellipse cx="120" cy="32" rx="7" ry="4" fill="#fff" opacity="0.2"/>`;
+  }
+  if (look.hair === 'locs') {
+    return `${cap}<path d="M92 70 q-4 18 2 28 M148 70 q4 18 -2 28" fill="none" stroke="${c}" stroke-width="7" stroke-linecap="round"/>`;
+  }
+  if (look.hair === 'braid') {
+    return `${cap}<circle cx="96" cy="118" r="7" fill="${c}"/><circle cx="90" cy="132" r="7" fill="${c}"/>`;
+  }
+  return cap;
 }
 
 function face(look: PersonLook, pose: Pose): string {
@@ -130,7 +157,7 @@ function face(look: PersonLook, pose: Pose): string {
   </g>`;
 }
 
-function body(look: PersonLook): { legs: string; torso: string; arms: string } {
+function body(look: PersonLook): { legs: string; torso: string } {
   const skin = look.skin;
   const leg = (side: string, origin: string, d: string) =>
     `<g class="leg ${side}" style="transform-origin:${origin}"><path d="${d}" fill="${skin}"/></g>`;
@@ -144,15 +171,22 @@ function body(look: PersonLook): { legs: string; torso: string; arms: string } {
       <path d="M108 132 C104 156 106 170 112 178 L128 178 C134 170 136 156 132 132 Z" fill="${skin}"/>
       <path d="M80 176 C72 206 78 250 94 272 L146 272 C162 250 168 206 160 176 Q120 190 80 176 Z" fill="${skin}"/>
     </g>`;
-  const arms = `<g class="arm left" style="transform-origin:78px 180px">
-      <path d="M86 170 C58 182 40 220 38 262 C36 276 50 280 56 268 C60 230 74 198 96 184 Z" fill="${skin}"/>
-      <circle cx="46" cy="270" r="9" fill="${skin}"/>
-    </g>
-    <g class="arm right" style="transform-origin:162px 180px">
-      <path d="M154 170 C182 182 200 220 202 262 C204 276 190 280 184 268 C180 230 166 198 144 184 Z" fill="${skin}"/>
-      <circle cx="194" cy="270" r="9" fill="${skin}"/>
+  return { legs, torso };
+}
+
+function arm(side: 'left' | 'right', skin: string, sleeve: string): string {
+  if (side === 'left') {
+    return `<g class="arm left" style="transform-origin:92px 172px">
+      <path d="M98 166 C78 174 66 206 64 240 C62 254 74 258 78 246 C82 214 90 184 108 174 Z" fill="${skin}"/>
+      <circle cx="70" cy="248" r="7.5" fill="${skin}"/>
+      ${sleeve}
     </g>`;
-  return { legs, torso, arms };
+  }
+  return `<g class="arm right" style="transform-origin:148px 172px">
+    <path d="M142 166 C162 174 174 206 176 240 C178 254 166 258 162 246 C158 214 150 184 132 174 Z" fill="${skin}"/>
+    <circle cx="170" cy="248" r="7.5" fill="${skin}"/>
+    ${sleeve}
+  </g>`;
 }
 
 function streetWear(look: PersonLook): string {
@@ -188,19 +222,23 @@ export function renderPerson(opts: {
   embed?: boolean;
 }): string {
   const pose = opts.pose ?? 'idle';
-  const { legs, torso, arms } = body(opts.look);
+  const { legs, torso } = body(opts.look);
   let back = '';
   let main = '';
-  let sleeves = '';
+  let sleeveL = '';
+  let sleeveR = '';
   let shade = '';
   let extras = '';
   let defs = '';
+  const longHem = new Set(['rain-coat', 'garden-gown', 'palazzo', 'jumpsuit', 'hero-cape', 'crop-jacket', 'puff-pencil']);
+  const hemClass = opts.outfit && longHem.has(opts.outfit.sketchId) ? ' hem-long' : '';
   if (opts.outfit) {
     const g = renderGarment(opts.outfit, opts.uid, 'worn', 'fashion');
     defs = g.defs;
     back = g.back;
     main = g.main;
-    sleeves = g.sleeves;
+    sleeveL = g.sleeveL;
+    sleeveR = g.sleeveR;
     shade = g.shade;
     extras = g.extras;
   }
@@ -219,8 +257,8 @@ export function renderPerson(opts: {
     <g class="garment-back">${back}</g>
     ${torso}
     <g class="garment-main">${street}${main}</g>
-    ${arms}
-    <g class="garment-sleeves">${sleeves}</g>
+    ${arm('left', opts.look.skin, sleeveL)}
+    ${arm('right', opts.look.skin, sleeveR)}
     <g class="garment-shade">${shade}</g>
     <circle cx="120" cy="96" r="42" fill="${opts.look.skin}"/>
     <ellipse cx="78" cy="102" rx="8" ry="11" fill="${opts.look.skin}"/>
@@ -230,9 +268,9 @@ export function renderPerson(opts: {
     ${beret}
     <g class="garment-extras">${extras}</g>`;
   if (opts.embed) {
-    return `<g class="person pose-${pose}">${defs ? `<defs>${defs}</defs>` : ''}${inner}</g>`;
+    return `<g class="person pose-${pose}${hemClass}">${defs ? `<defs>${defs}</defs>` : ''}${inner}</g>`;
   }
-  return `<svg class="person pose-${pose}" viewBox="${PERSON_VB}" width="300" height="540">
+  return `<svg class="person pose-${pose}${hemClass}" viewBox="${PERSON_VB}" width="300" height="540">
     <defs>${defs}</defs>
     ${inner}
   </svg>`;

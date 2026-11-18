@@ -170,10 +170,10 @@ export function shopSvg(opts: {
     <ellipse cx="450" cy="860" rx="${rug ? 190 : 120}" ry="${rug ? 40 : 24}" fill="none" stroke="#f7e1c8" stroke-width="4"/>
 
     <g class="poster" data-act="poster">
-      <rect x="760" y="120" width="100" height="130" rx="8" fill="${opts.posterOn ? '#2a211c' : '#f7efe6'}" stroke="#e2c27a" stroke-width="4"/>
-      <text x="810" y="168" text-anchor="middle" fill="${opts.posterOn ? '#f6d7a2' : '#8a7068'}" font-family="Fraunces, Georgia, serif" font-size="18">Show</text>
-      <text x="810" y="194" text-anchor="middle" fill="${opts.posterOn ? '#fff' : '#b7a197'}" font-family="Nunito, sans-serif" font-size="13">${opts.posterOn ? 'tonight' : 'soon'}</text>
-      <path d="M784 230 l12 18 14 -22 12 16 14 -20" fill="none" stroke="${opts.posterOn ? '#e56b93' : '#d9c3b8'}" stroke-width="3"/>
+      <rect x="36" y="108" width="108" height="118" rx="8" fill="${opts.posterOn ? '#2a211c' : '#f7efe6'}" stroke="#e2c27a" stroke-width="4"/>
+      <text x="90" y="154" text-anchor="middle" fill="${opts.posterOn ? '#f6d7a2' : '#8a7068'}" font-family="Fraunces, Georgia, serif" font-size="18">Show</text>
+      <text x="90" y="180" text-anchor="middle" fill="${opts.posterOn ? '#fff' : '#b7a197'}" font-family="Nunito, sans-serif" font-size="13">${opts.posterOn ? 'tonight' : 'soon'}</text>
+      <path d="M58 200 l14 16 14 -20 12 14 14 -18" fill="none" stroke="${opts.posterOn ? '#e56b93' : '#d9c3b8'}" stroke-width="3"/>
     </g>
 
     <g class="table">
