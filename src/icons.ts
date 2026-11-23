@@ -19,8 +19,9 @@ const PATHS: Record<string, string> = {
   mute: '<path d="M4 10h3l4-3v10l-4-3H4V10z" fill="currentColor"/><path d="M16 9l5 6M21 9l-5 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
   sound:
     '<path d="M4 10h3l4-3v10l-4-3H4V10z" fill="currentColor"/><path d="M16 9a4 4 0 0 1 0 6M18.5 7a7 7 0 0 1 0 10" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>',
+  // Shop: a striped, scalloped awning over a little shop front and door.
   shelf:
-    '<path fill="currentColor" fill-rule="evenodd" d="M3.2 7.4h17.6v4H3.2zm2.1 0h1.45v4H5.3zm3.55 0h1.45v4H8.85zm3.55 0h1.45v4h-1.45zm3.55 0h1.45v4h-1.45zM4.8 11.2h14.4V20.2c0 .7-.5 1.2-1.2 1.2H6c-.7 0-1.2-.5-1.2-1.2v-9zm2.3 2.1h3.4v2.5H7.1zm5.6 1.3h3.3V21.4h-3.3z"/>',
+    '<path d="M3 9L4.5 4h15L21 9a2.25 2.25 0 0 1-4.5 0a2.25 2.25 0 0 1-4.5 0a2.25 2.25 0 0 1-4.5 0A2.25 2.25 0 0 1 3 9z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M8.25 4L7.5 9M15.75 4l.75 5M12 4v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M5 12.8V20h14v-7.2M3.5 20h17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M10 20v-4.4a.6.6 0 0 1 .6-.6h2.8a.6.6 0 0 1 .6.6V20" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="13" cy="17.7" r=".7" fill="currentColor"/>',
   back: '<path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
   lock: '<rect x="6" y="11" width="12" height="9" rx="2" fill="currentColor"/><path d="M8.5 11V8.5a3.5 3.5 0 0 1 7 0V11" fill="none" stroke="currentColor" stroke-width="1.7"/>',
   check: '<path d="M5 12.5l4.2 4.2L19 7.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>',
@@ -28,8 +29,9 @@ const PATHS: Record<string, string> = {
     '<circle cx="7" cy="7" r="2.4" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="7" cy="17" r="2.4" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M9 8.5L20 18M9 15.5L20 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
   needle:
     '<path d="M16 3l5 5-9.5 9.5a3 3 0 0 1-4.2 0 3 3 0 0 1 0-4.2L16 3z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M14 6l4 4" stroke="currentColor" stroke-width="1.6"/>',
+  // Lookbook: an open magazine with a dress on the right-hand page.
   lookbook:
-    '<path fill="currentColor" fill-rule="evenodd" d="M3 6.1h8.1v13.2H3.9c-.5 0-.9-.4-.9-.9V6.1zm9.9 0H21v12.3c0 .5-.4.9-.9.9h-7.2V6.1zM15.35 8.15h2.5l-.45 1.85h.8l1.4 4.85h-6l1.4-4.85h.8z"/>',
+    '<path d="M12 6.6C10 5.1 7 4.6 3.5 5v13.2c3.5-.4 6.5.1 8.5 1.6 2-1.5 5-2 8.5-1.6V5c-3.5-.4-6.5.1-8.5 1.6zM12 6.6v13.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M14.95 7.3Q16.25 8.35 17.55 7.3L17.85 9.15 17.1 10.7 18.85 15.6Q16.25 16.65 13.65 15.6L15.4 10.7 14.65 9.15Z" fill="currentColor" stroke="currentColor" stroke-width=".4" stroke-linejoin="round"/>',
 };
 
 export function icon(name: string, className = 'icon'): string {

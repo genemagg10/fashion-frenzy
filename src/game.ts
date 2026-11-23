@@ -777,7 +777,7 @@ function shopScene(): string {
   });
   const show = Boolean(customer.show);
   return `${hud()}
-    <div class="split">
+    <div class="split shop-split">
       <div class="art shop-art">${art}</div>
       <section class="panel">
         <div class="panel-scroll">
@@ -1025,8 +1025,8 @@ function studioScene(): string {
           ${pip(pipLine())}
           ${session.phase === 'sew' ? `<div class="sew-track" aria-hidden="true"><i></i><i></i><i></i></div><p class="step-label">Follow the marks.</p>` : ''}
           <div class="panel-fade" aria-hidden="true"></div>
-          <button class="more-chevron" type="button" data-act="panel-more" aria-label="More below">⌄</button>
         </div>
+        ${session.phase === 'sew' ? '' : `<div class="more-cue"><button class="more-chevron" type="button" data-act="panel-more" aria-label="More below" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9.5l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>`}
         <div class="panel-dock">${session.phase === 'sew' ? dock.replace('<p class="step-label">Follow the marks.</p>', '') : dock}</div>
       </section>
     </div>`;
@@ -1083,9 +1083,17 @@ function mountPanelCue(): () => void {
   const scroll = document.querySelector('.panel-scroll');
   const panel = scroll?.closest('.panel');
   if (!scroll || !panel) return () => {};
+  const cue = panel.querySelector<HTMLElement>('.more-cue');
   const update = () => {
-    const more = scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight > 16;
-    panel.classList.toggle('can-scroll', more);
+    // The cue strip has its own row between the list and the dock, so it never
+    // sits on a swatch or a button. Reserve the row only while the list
+    // overflows (count the strip's own height when deciding), and fade the
+    // chevron out once the bottom is reached.
+    const strip = panel.classList.contains('has-more') && cue ? cue.offsetHeight : 0;
+    const overflow = scroll.scrollHeight - (scroll.clientHeight + strip) > 16;
+    panel.classList.toggle('has-more', overflow);
+    const left = scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight;
+    panel.classList.toggle('can-scroll', overflow && left > 12);
   };
   scroll.addEventListener('scroll', update, { passive: true });
   const observer = new ResizeObserver(update);

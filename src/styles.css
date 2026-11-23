@@ -1529,9 +1529,9 @@ img.photog-sprite {
 .shop-cloud { width: 16%; height: 9%; opacity: 0.45; }
 .shop-bird { width: 10px; height: 5px; }
 
-.tool-tabs, .panel-fade, .more-chevron { display: none; }
+.tool-tabs, .panel-fade, .more-cue { display: none; }
 .panel.can-scroll .panel-fade { display: block; }
-.panel.can-scroll .more-chevron { display: grid; place-items: center; }
+.panel.has-more .more-cue { display: flex; }
 .tool-pane { display: block; }
 .studio-fabric .tool-pane[data-pane="trim"] { display: none; }
 .studio-finish .tool-pane[data-pane="color"],
@@ -1555,30 +1555,53 @@ img.photog-sprite {
 }
 .tool-tab.on { background: #e56b93; color: white; box-shadow: none; }
 .panel { position: relative; }
+/* Purely visual: a short fade over the last visible row hints at more. */
 .panel-fade {
   position: sticky;
-  bottom: 28px;
-  height: 36px;
-  margin-top: -36px;
-  background: linear-gradient(transparent, var(--paper));
+  bottom: 0;
+  height: 18px;
+  margin-top: -18px;
+  background: linear-gradient(rgba(255, 249, 244, 0), var(--paper));
   pointer-events: none;
+  z-index: 2;
+}
+/* Its own row between the scrolling list and the pinned dock. */
+.more-cue {
+  flex: none;
+  height: 22px;
+  align-items: center;
+  justify-content: center;
+  margin: 2px 0 -4px;
+  position: relative;
+}
+.more-cue::before {
+  content: '';
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  top: 50%;
+  border-top: 1px dashed #e2cfc4;
 }
 .more-chevron {
-  position: sticky;
-  bottom: 0;
-  margin: 0 auto;
+  position: relative;
+  display: grid;
+  place-items: center;
   width: 44px;
-  height: 28px;
+  height: 22px;
+  padding: 0;
   border: 0;
   border-radius: 999px;
   background: #fff;
   color: var(--rose-deep);
-  font-size: 1.1rem;
-  font-weight: 800;
-  box-shadow: 0 0 0 2px #e7d5cb;
+  box-shadow: 0 0 0 1.5px #e7d5cb;
+  transition: opacity 0.25s ease;
   animation: more-bob 1.1s ease-in-out infinite;
 }
-@keyframes more-bob { 50% { transform: translateY(3px); } }
+.more-chevron svg { width: 18px; height: 18px; display: block; }
+.panel.has-more:not(.can-scroll) .more-chevron { opacity: 0; pointer-events: none; animation: none; }
+.more-cue::before { transition: opacity 0.25s ease; }
+.panel.has-more:not(.can-scroll) .more-cue::before { opacity: 0; }
+@keyframes more-bob { 50% { transform: translateY(2px); } }
 
 .now-playing {
   position: fixed;
@@ -1649,7 +1672,7 @@ img.photog-sprite {
   display: flex;
   flex-direction: column;
 }
-.studio .panel-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; }
+.studio .panel-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; padding-bottom: 4px; }
 .studio .tool-tabs,
 .studio .panel-dock { flex: none; }
 
@@ -1664,4 +1687,12 @@ img.photog-sprite {
   .studio .pip { display: none; }
   .studio .steps { display: none; }
   html, body, #app, .stage { overflow: hidden; }
+}
+
+/* Portrait shop: the panel takes the height its words need and the painted
+   room fills the rest, so tall iPads don't show an empty band above the
+   buttons. */
+@media (max-aspect-ratio: 9/10) {
+  .split.shop-split { grid-template-rows: minmax(0, 1fr) fit-content(56%); }
+  .shop-split > .panel { max-height: none; }
 }
