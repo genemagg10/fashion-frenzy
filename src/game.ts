@@ -20,7 +20,7 @@ import { renderDressForm, renderSketchDrawing } from './garments';
 import { icon } from './icons';
 import { grade, liveGrade, wishFromTheme, type Draft, type Grade } from './score';
 import { sewKind, sewPlan, type SewKind } from './sew';
-import { shopSvg } from './shopart';
+import { mountShop, shopSvg } from './shopart';
 import {
   customerBust,
   decorArt,
@@ -327,6 +327,7 @@ function mount(): (() => void) | void {
   if (session.scene === 'sketch') return mountSketch();
   if (session.scene === 'studio') return mountStudio();
   if (session.scene === 'runway') return mountRunway();
+  if (session.scene === 'shop') return mountShop(document);
   return undefined;
 }
 
@@ -724,7 +725,6 @@ function mountTitle(): () => void {
 function shopScene(): string {
   const customer = session.customer ?? CUSTOMERS[0];
   const art = shopSvg({
-    decor: save.decor,
     customerId: customer.id,
     posterOn: save.tutorialDone && save.customersServed >= (reputation() >= 4 ? 2 : 3),
   });

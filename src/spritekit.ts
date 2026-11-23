@@ -469,21 +469,14 @@ export function decorArt(id: string): string {
 }
 
 export function filesFor(scene: string, extra: string[] = []): string[] {
-  const props = [
-    'sprites/props/clothes-rack.png',
-    'sprites/props/mirror.png',
-    'sprites/props/flowers-pot.png',
-    'sprites/props/plant-monstera.png',
-    'sprites/props/fabric-bolts.png',
-    'sprites/props/sewing-machine.png',
-    'sprites/props/pincushion-kit.png',
-  ];
   const pips = ['happy', 'love', 'thinking', 'disappointed', 'cheer', 'surprised'].map((e) => `sprites/pip/pip-${e}.png`);
   const sew = ['empty', 'draped-pinned', 'pattern-pinned', 'half-sewn', 'finished-simple'].map((s) => `sprites/forms/form-${s}.png`);
   if (scene === 'title' || scene === 'cover') {
     return ['sprites/models/signature/garden-gown.png', 'sprites/models/signature/sunny-dress.png', 'sprites/models/signature/ball-gown.png', ...pips];
   }
-  if (scene === 'shop') return [...props, ...pips, ...extra];
+  if (scene === 'shop') {
+    return ['sprites/shop/shop-portrait.png', 'sprites/shop/shop-wide.png', ...pips, ...extra];
+  }
   if (scene === 'sketch') return [...extra, ...pips];
   if (scene === 'studio') return [...sew, ...pips, ...extra];
   if (scene === 'reaction' || scene === 'reviews') return [...pips, ...extra];

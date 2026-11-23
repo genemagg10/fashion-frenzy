@@ -1489,3 +1489,118 @@ h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); line-height: 1.05; }
   .hud-stats, .hud-actions { gap: 4px; }
   .icon-btn, .icon-btn.big { width: 44px; height: 44px; }
 }
+
+.shop-stage.painted {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #f6ddd0;
+}
+.shop-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center bottom;
+  image-rendering: auto;
+  pointer-events: none;
+}
+.shop-stage.painted .shop-customer {
+  position: absolute;
+  z-index: 3;
+  width: auto;
+  max-width: none;
+  height: auto;
+  transform: none;
+  animation: shop-bob 2.8s ease-in-out infinite;
+}
+.contact-shadow {
+  position: absolute;
+  z-index: 2;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(70, 36, 24, 0.4), transparent 72%);
+  transform: translate(-50%, -40%);
+  pointer-events: none;
+}
+.shop-window-fx {
+  position: absolute;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.lamp-glow {
+  position: absolute;
+  z-index: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 220, 140, 0.72), transparent 68%);
+  mix-blend-mode: screen;
+  pointer-events: none;
+  animation: lamp-flicker 2.6s ease-in-out infinite;
+}
+.lamp-right { animation-delay: 0.45s; }
+.shop-cloud {
+  position: absolute;
+  top: 14%;
+  left: -30%;
+  width: 36%;
+  height: 16%;
+  border-radius: 40px;
+  background: rgba(255, 255, 255, 0.9);
+  animation: cloud-drift 24s linear infinite;
+}
+.shop-bird {
+  position: absolute;
+  top: 30%;
+  left: -14%;
+  width: 16px;
+  height: 8px;
+  background: #3d4a58;
+  border-radius: 60% 40% 50% 50%;
+  animation: bird-pass 16s linear infinite;
+}
+.shop-bird::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: -4px;
+  width: 8px;
+  height: 5px;
+  background: #5c6b7a;
+  border-radius: 50%;
+  transform: rotate(-18deg);
+}
+.mote {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(255, 248, 220, 0.95);
+  animation: mote-float 7s ease-in-out infinite;
+}
+.shop-stage.painted .hotspot {
+  position: absolute;
+  z-index: 4;
+  left: auto;
+  top: auto;
+  right: auto;
+  bottom: auto;
+  min-width: 44px;
+  min-height: 44px;
+}
+@keyframes shop-bob { 50% { transform: translateY(-5px); } }
+@keyframes lamp-flicker { 0%, 100% { opacity: 0.32; } 48% { opacity: 0.9; } 72% { opacity: 0.48; } }
+@keyframes cloud-drift { to { transform: translateX(360%); } }
+@keyframes bird-pass {
+  0%, 64% { transform: translateX(0); opacity: 0; }
+  68% { opacity: 1; }
+  90% { transform: translateX(560%); opacity: 1; }
+  96%, 100% { opacity: 0; }
+}
+@keyframes mote-float {
+  0% { transform: translateY(8px); opacity: 0; }
+  30% { opacity: 0.9; }
+  100% { transform: translateY(-34px); opacity: 0; }
+}
