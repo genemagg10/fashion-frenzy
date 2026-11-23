@@ -1,3 +1,4 @@
+import { installAspectWatch } from './aspect';
 import { audio } from './audio';
 import { renderPerson, type Pose } from './characters';
 import {
@@ -106,6 +107,7 @@ const session: {
   leaveArmed: boolean;
   event: 'vip' | 'rush' | 'delivery' | null;
   bonus: number;
+  toolTab: 'color' | 'pattern' | 'trim';
 } = {
   scene: 'title',
   customer: null,
@@ -131,6 +133,7 @@ const session: {
   leaveArmed: false,
   event: null,
   bonus: 0,
+  toolTab: 'color',
 };
 
 let cleanup: () => void = () => {};
@@ -167,6 +170,8 @@ function persist(): void {
 
 export function boot(): void {
   audio.setMuted(save.muted);
+  audio.onTrack = (title) => showNowPlaying(title);
+  installAspectWatch();
   const app = document.getElementById('app');
   if (!app) return;
   let origin: { x: number; y: number } | null = null;
@@ -281,6 +286,7 @@ function paint(): void {
   app.dataset.scene = session.scene;
   app.innerHTML = `<div class="${stageClass()}">${sceneHtml()}</div><div id="toast" role="status"></div><div id="live" class="sr-only" aria-live="polite"></div>`;
   cleanup = mount() ?? (() => {});
+  requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
   const bump = session.hudBump;
   session.hudBump = false;
   if (bump) document.querySelector('.stat-coins')?.classList.add('bump');
@@ -336,10 +342,34 @@ function goto(scene: Scene): void {
   if (scene === 'shop' && !session.keepCustomer) prepareShop();
   session.keepCustomer = false;
   session.scene = scene;
-  if (scene === 'runway') audio.setMode('runway');
-  else audio.setMode('shop');
+  syncMusic();
   if (scene === 'shop' && from !== 'shop') audio.door();
   draw();
+}
+
+function syncMusic(): void {
+  const mood = session.customer?.mood ?? 'soft';
+  audio.setBed(mood, session.scene === 'runway');
+}
+
+let trackTimer = 0;
+
+function showNowPlaying(title: string): void {
+  let chip = document.getElementById('now-playing');
+  if (!chip) {
+    chip = document.createElement('div');
+    chip.id = 'now-playing';
+    chip.className = 'now-playing';
+    chip.innerHTML = '<i class="np-disc" aria-hidden="true"></i><span></span>';
+    document.body.appendChild(chip);
+  }
+  const label = chip.querySelector('span');
+  if (label) label.textContent = title;
+  chip.classList.remove('show');
+  void chip.offsetWidth;
+  chip.classList.add('show');
+  window.clearTimeout(trackTimer);
+  trackTimer = window.setTimeout(() => chip?.classList.remove('show'), 3400);
 }
 
 function returnToShop(): void {
@@ -499,10 +529,26 @@ function onClick(event: MouseEvent): void {
     case 'color':
       if (session.draft) {
         session.draft.color = id;
-        session.phase = 'fabric';
         draw();
       }
       break;
+    case 'tool-tab':
+      if (id === 'color' || id === 'pattern' || id === 'trim') {
+        session.toolTab = id;
+        document.querySelectorAll('.tool-tab').forEach((tab) => {
+          tab.classList.toggle('on', tab.getAttribute('data-id') === id);
+        });
+        document.querySelectorAll('.tool-pane').forEach((pane) => {
+          pane.classList.toggle('on', pane.getAttribute('data-pane') === id);
+        });
+        requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
+      }
+      break;
+    case 'panel-more': {
+      const scroller = document.querySelector('.panel-scroll');
+      scroller?.scrollBy({ top: 140, behavior: 'smooth' });
+      break;
+    }
     case 'pattern':
       if (session.draft && isFabric(id)) {
         session.draft.pattern = id;
@@ -515,6 +561,7 @@ function onClick(event: MouseEvent): void {
         break;
       }
       session.phase = 'sew';
+      session.toolTab = 'color';
       draw();
       break;
     case 'reviews':
@@ -609,8 +656,8 @@ function hud(extra = ''): string {
     </div>
     <div class="hud-actions">
       ${extra}
-      <button class="icon-btn ${deal ? 'deal' : ''}" type="button" data-act="shelf" aria-label="Shop shelf">${icon('shelf')}</button>
-      <button class="icon-btn" type="button" data-act="lookbook" aria-label="Lookbook">${icon('lookbook')}</button>
+      <button class="icon-btn ${deal ? 'deal' : ''}" type="button" data-act="shelf" aria-label="Shop" title="Shop">${icon('shelf')}</button>
+      <button class="icon-btn" type="button" data-act="lookbook" aria-label="Lookbook" title="Lookbook">${icon('lookbook')}</button>
       <button class="icon-btn" type="button" data-act="mute" aria-label="${save.muted ? 'Unmute' : 'Mute'}">${icon(save.muted ? 'mute' : 'sound')}</button>
     </div>
   </header>`;
@@ -730,7 +777,7 @@ function shopScene(): string {
   });
   const show = Boolean(customer.show);
   return `${hud()}
-    <div class="split">
+    <div class="split shop-split">
       <div class="art shop-art">${art}</div>
       <section class="panel">
         <div class="panel-scroll">
@@ -922,6 +969,7 @@ function pickSketch(): void {
     sewQuality: 0,
   };
   session.phase = 'fabric';
+  session.toolTab = 'color';
   session.parade = false;
   audio.chime();
   goto('studio');
@@ -951,10 +999,13 @@ function studioScene(): string {
       : session.phase === 'sew'
         ? `<p class="step-label">Follow the marks.</p><div class="dock-row">${autoReady ? '<button class="btn secondary" type="button" data-act="auto-sew">Auto-stitch</button>' : ''}<button class="btn" type="button" data-act="help-sew">Pip, help me sew</button></div>`
         : `<button class="btn" type="button" data-act="finish">${esc(session.mode === 'show' ? (session.show && session.show.looks.length === 2 ? 'To the runway' : 'Save this look') : `Show ${session.customer?.name ?? 'them'}`)}</button>`;
+  const tab = session.phase === 'finish' ? 'trim' : session.toolTab === 'trim' && session.phase === 'fabric' ? session.toolTab : session.toolTab;
+  if (session.phase === 'finish') session.toolTab = 'trim';
   return `${hud()}
     <div class="split studio studio-${session.phase}">
       <div class="art form-art">${renderDressForm(preview, nextId('form'), formMode)}</div>
       <section class="panel">
+        ${session.phase === 'sew' ? '' : toolTabs(session.phase === 'finish' ? 'trim' : tab)}
         <div class="panel-scroll">
           <div class="sketch-top">
             <button class="icon-btn" type="button" data-act="back" aria-label="Back">${icon('back')}</button>
@@ -969,43 +1020,89 @@ function studioScene(): string {
             <li class="${session.phase === 'finish' ? 'on' : ''}">Trim</li>
           </ol>
           ${session.phase === 'fabric' || session.phase === 'finish' ? meterBlock(draft) : ''}
-          ${session.phase === 'fabric' ? fabricControls(draft) : ''}
+          ${session.phase === 'fabric' ? fabricControls(draft, tab) : ''}
           ${session.phase === 'finish' ? finishControls(draft) : ''}
           ${pip(pipLine())}
           ${session.phase === 'sew' ? `<div class="sew-track" aria-hidden="true"><i></i><i></i><i></i></div><p class="step-label">Follow the marks.</p>` : ''}
+          <div class="panel-fade" aria-hidden="true"></div>
         </div>
+        ${session.phase === 'sew' ? '' : `<div class="more-cue"><button class="more-chevron" type="button" data-act="panel-more" aria-label="More below" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9.5l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>`}
         <div class="panel-dock">${session.phase === 'sew' ? dock.replace('<p class="step-label">Follow the marks.</p>', '') : dock}</div>
       </section>
     </div>`;
 }
 
-function fabricControls(draft: Draft): string {
+function toolTabs(active: string): string {
+  const tab = (id: string, label: string) =>
+    `<button type="button" class="tool-tab ${active === id ? 'on' : ''}" role="tab" data-act="tool-tab" data-id="${id}" aria-selected="${active === id}">${label}</button>`;
+  return `<div class="tool-tabs" role="tablist">${tab('color', 'Color')}${tab('pattern', 'Pattern')}${tab('trim', 'Trim')}</div>`;
+}
+
+function fabricControls(draft: Draft, active: string): string {
   const owned = FABRICS.filter((fabric) => save.fabrics.includes(fabric.id));
   const cloth = draft.color || '#f4e4d4';
-  return `<p class="color-name">${draft.color ? esc(colorName(draft.color)) : 'Choose a color'}</p>
-    <div class="patterns" aria-label="Cloth">${owned
-      .map((fabric) => `<button type="button" class="pat ${draft.pattern === fabric.id ? 'on' : ''}" data-act="pattern" data-id="${fabric.id}" style="--c:${cloth}">
-          <i class="pat-swatch" style="background-image:url(${swatchURL(fabric.id, cloth)})"></i><span>${esc(fabric.name)}</span>
-        </button>`)
-      .join('')}</div>
-    <div class="colors">${PALETTE.map((swatch) => `<button type="button" class="dot ${draft.color === swatch.hex ? 'on' : ''}" data-act="color" data-id="${swatch.hex}" aria-label="${esc(swatch.name)}" style="background:${swatch.hex}"></button>`).join('')}</div>
-    <button class="btn secondary" type="button" data-act="shelf">More cloth is on the shelf</button>`;
+  return `<div class="tool-panes">
+    <div class="tool-pane ${active === 'color' ? 'on' : ''}" data-pane="color">
+      <p class="color-name">${draft.color ? esc(colorName(draft.color)) : 'Choose a color'}</p>
+      <div class="colors">${PALETTE.map((swatch) => `<button type="button" class="dot ${draft.color === swatch.hex ? 'on' : ''}" data-act="color" data-id="${swatch.hex}" aria-label="${esc(swatch.name)}" style="background:${swatch.hex}"></button>`).join('')}</div>
+    </div>
+    <div class="tool-pane ${active === 'pattern' ? 'on' : ''}" data-pane="pattern">
+      <div class="patterns" aria-label="Cloth">${owned
+        .map((fabric) => `<button type="button" class="pat ${draft.pattern === fabric.id ? 'on' : ''}" data-act="pattern" data-id="${fabric.id}" style="--c:${cloth}">
+            <i class="pat-swatch" style="background-image:url(${swatchURL(fabric.id, cloth)})"></i><span>${esc(fabric.name)}</span>
+          </button>`)
+        .join('')}</div>
+    </div>
+    <div class="tool-pane ${active === 'trim' ? 'on' : ''}" data-pane="trim"><p class="note">Sew the dress, then pick a trim.</p></div>
+    <button class="btn secondary" type="button" data-act="shelf">More cloth is on the shelf</button>
+  </div>`;
 }
 
 function finishControls(draft: Draft): string {
   const owned = ACCESSORIES.filter((item) => save.accessories.includes(item.id));
-  return `<div class="patterns trims">${owned
-    .map((item) => `<button type="button" class="pat ${draft.accessories.includes(item.id) ? 'on' : ''}" data-act="accessory" data-id="${item.id}">
-        <i class="trim-icon"><img alt="" src="${trimURL(item.id)}"></i><span>${esc(item.name)}</span>
+  return `<div class="tool-panes">
+    <div class="tool-pane" data-pane="color"><p class="note">Color is set. Tap back if you want to change it.</p></div>
+    <div class="tool-pane" data-pane="pattern"><p class="note">The cloth is set. Tap back if you want to change it.</p></div>
+    <div class="tool-pane on" data-pane="trim"><div class="patterns trims">${owned
+      .map((item) => `<button type="button" class="pat ${draft.accessories.includes(item.id) ? 'on' : ''}" data-act="accessory" data-id="${item.id}">
+        <i class="trim-icon"><img class="sprite" alt="" src="${trimURL(item.id)}"></i><span>${esc(item.name)}</span>
       </button>`)
-    .join('')}</div>`;
+      .join('')}</div></div>
+  </div>`;
 }
 
 function mountStudio(): () => void {
   const stops: Array<() => void> = [];
   if (session.phase === 'sew') stops.push(mountSew());
   if (session.phase === 'fabric' || session.phase === 'finish') stops.push(mountTape());
+  stops.push(mountPanelCue());
   return () => stops.forEach((stop) => stop());
+}
+
+function mountPanelCue(): () => void {
+  const scroll = document.querySelector('.panel-scroll');
+  const panel = scroll?.closest('.panel');
+  if (!scroll || !panel) return () => {};
+  const cue = panel.querySelector<HTMLElement>('.more-cue');
+  const update = () => {
+    // The cue strip has its own row between the list and the dock, so it never
+    // sits on a swatch or a button. Reserve the row only while the list
+    // overflows (count the strip's own height when deciding), and fade the
+    // chevron out once the bottom is reached.
+    const strip = panel.classList.contains('has-more') && cue ? cue.offsetHeight : 0;
+    const overflow = scroll.scrollHeight - (scroll.clientHeight + strip) > 16;
+    panel.classList.toggle('has-more', overflow);
+    const left = scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight;
+    panel.classList.toggle('can-scroll', overflow && left > 12);
+  };
+  scroll.addEventListener('scroll', update, { passive: true });
+  const observer = new ResizeObserver(update);
+  observer.observe(scroll);
+  update();
+  return () => {
+    scroll.removeEventListener('scroll', update);
+    observer.disconnect();
+  };
 }
 
 function mountTape(): () => void {
@@ -1430,6 +1527,7 @@ function helpSew(auto = false): void {
   if (!session.draft) return;
   session.draft.sewQuality = auto ? 0.74 : 0.58;
   session.phase = 'finish';
+  session.toolTab = 'trim';
   toast(auto ? 'Auto-stitch done. The trims are still yours.' : 'Pip finished the stitches. You can still add trims.');
   audio.chime();
   draw();
@@ -1659,7 +1757,12 @@ async function shareCurrent(): Promise<void> {
     ctx.fillStyle = '#fbf6f0';
     ctx.fillRect(0, 0, 1080, 1440);
     ctx.imageSmoothingEnabled = true;
-    ctx.drawImage(image, 270, 240, 540, 864);
+    const maxW = 640;
+    const maxH = 980;
+    const scale = Math.min(maxW / image.naturalWidth, maxH / image.naturalHeight);
+    const dw = image.naturalWidth * scale;
+    const dh = image.naturalHeight * scale;
+    ctx.drawImage(image, (1080 - dw) / 2, 180 + (maxH - dh) / 2, dw, dh);
     ctx.fillStyle = '#2a211c';
     ctx.textAlign = 'center';
     ctx.font = '700 72px Fraunces, Georgia, serif';
@@ -2021,6 +2124,7 @@ async function playShow(): Promise<void> {
     slot.classList.toggle('finale', entry.finale);
     slot.classList.remove('posing');
     await walk(slot, reduce ? 700 : ella ? 3000 : 2400);
+    audio.runwayHit();
     if (runway.cancelled || session.scene !== 'runway') return;
     const person = slot.querySelector('.person');
     person?.classList.remove('pose-stride');
