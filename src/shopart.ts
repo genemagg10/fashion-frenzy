@@ -4,8 +4,8 @@ const BASE = import.meta.env.BASE_URL || './';
 
 const PORTRAIT = {
   src: `${BASE}sprites/shop/shop-portrait.png`,
-  w: 768,
-  h: 1024,
+  w: 864,
+  h: 1152,
   feet: 0.89,
   height: 0.58,
   window: { x: 0.3, y: 0.2, w: 0.4, h: 0.32 },
@@ -16,8 +16,8 @@ const PORTRAIT = {
 
 const WIDE = {
   src: `${BASE}sprites/shop/shop-wide.png`,
-  w: 1024,
-  h: 576,
+  w: 1280,
+  h: 720,
   feet: 0.93,
   height: 0.65,
   window: { x: 0.33, y: 0.12, w: 0.34, h: 0.46 },
@@ -31,7 +31,7 @@ type Room = typeof PORTRAIT;
 
 export function shopSvg(opts: { customerId: string; posterOn: boolean }): string {
   return `<div class="shop-stage painted" data-shop>
-    <img class="shop-bg" alt="" draggable="false" src="${PORTRAIT.src}">
+    <img class="shop-bg" alt="" draggable="false" data-room="portrait" src="${PORTRAIT.src}">
     <div class="shop-window-fx" aria-hidden="true">
       <i class="shop-cloud"></i>
       <i class="shop-bird"></i>
@@ -75,13 +75,18 @@ export function mountShop(root: ParentNode): () => void {
     const ch = stage.clientHeight;
     if (!cw || !ch) return;
     const room: Room = cw / ch >= 1.2 ? WIDE : PORTRAIT;
-    if (bg.getAttribute('src') !== room.src) bg.src = room.src;
-    const scale = Math.max(cw / room.w, ch / room.h);
+    if (bg.dataset.room !== (room === WIDE ? 'wide' : 'portrait')) {
+      bg.dataset.room = room === WIDE ? 'wide' : 'portrait';
+      bg.src = room.src;
+    }
+    const iw = bg.naturalWidth || room.w;
+    const ih = bg.naturalHeight || room.h;
+    const scale = Math.max(cw / iw, ch / ih);
     const rect = {
-      x: (cw - room.w * scale) / 2,
-      y: ch - room.h * scale,
-      w: room.w * scale,
-      h: room.h * scale,
+      x: (cw - iw * scale) / 2,
+      y: ch - ih * scale,
+      w: iw * scale,
+      h: ih * scale,
     };
     const feetX = rect.x + rect.w / 2;
     const feetY = rect.y + room.feet * rect.h;
@@ -102,13 +107,26 @@ export function mountShop(root: ParentNode): () => void {
     placeBox(plant, rect, room.plant);
   };
 
+  let tries = 0;
+  const onBg = () => layout();
+  const onErr = () => {
+    if (tries > 1) return;
+    tries += 1;
+    const room = bg.dataset.room === 'wide' ? WIDE : PORTRAIT;
+    bg.dataset.room = '';
+    bg.src = room.src;
+  };
   const observer = new ResizeObserver(layout);
   observer.observe(stage);
   customer.addEventListener('load', layout);
+  bg.addEventListener('load', onBg);
+  bg.addEventListener('error', onErr);
   layout();
   requestAnimationFrame(layout);
   return () => {
     observer.disconnect();
     customer.removeEventListener('load', layout);
+    bg.removeEventListener('load', onBg);
+    bg.removeEventListener('error', onErr);
   };
 }

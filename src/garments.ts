@@ -938,7 +938,7 @@ export function renderGarment(
     if (outfit.pattern === 'tulle') {
       const skirt = pieces.find((p) => p.role === 'skirt');
       if (skirt) {
-        shade += `<g transform="translate(${measure.cx} ${measure.waistY}) scale(1.06 1.03) translate(${-measure.cx} ${-measure.waistY})" opacity="0.28">
+        shade += `<g transform="translate(${measure.cx} ${measure.waistY}) scale(1.04) translate(${-measure.cx} ${-measure.waistY})" opacity="0.28">
           <path d="${skirt.d}" fill="${lighten(outfit.color, 0.2)}"/>
         </g>`;
       }
@@ -999,7 +999,7 @@ export function renderDressForm(
   else if (outfit?.color) href = tintedSprite('form', outfit.sketchId, outfit.color, outfit.pattern);
   const marks = mode === 'paper' && outfit ? `<g class="paper-marks">${paperDecor(outfit.sketchId)}</g>` : '';
   return `<svg class="dress-svg" viewBox="${FORM_VB}" preserveAspectRatio="xMidYMax meet">
-    <image id="form-photo" href="${href}" x="20" y="24" width="360" height="590" preserveAspectRatio="xMidYMax meet"/>
+    <image id="form-photo" href="${href}" x="20" y="55" width="360" height="528" preserveAspectRatio="xMidYMid meet"/>
     ${marks}
   </svg>`;
 }
