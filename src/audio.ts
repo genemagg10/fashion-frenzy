@@ -189,6 +189,143 @@ const SONGS: Record<Mood, Song> = {
   },
 };
 
+/** Game-show beds: a lobby theme plus one flavor per stage theme. */
+const SHOW_SONGS: Record<string, Song> = {
+  lobby: {
+    title: 'Spotlight Fanfare',
+    liveTitle: 'Spotlight Fanfare Live',
+    bpm: 118,
+    beats: 4,
+    swing: 0,
+    root: 67,
+    scale: MAJOR,
+    bars: [
+      { semi: 0, q: 'maj' },
+      { semi: 9, q: 'min' },
+      { semi: 5, q: 'maj' },
+      { semi: 7, q: '7' },
+    ],
+    melody: [4, null, 4, 5, 7, null, 4, null, 9, null, 7, 5, 4, null, 2, null, 5, null, 5, 7, 9, null, 5, null, 7, 9, 11, 9, 7, null, null, null],
+    drum: 'fanfare',
+    lead: 'brass',
+    energy: 1,
+  },
+  fairy: {
+    title: 'Petal Waltz',
+    liveTitle: 'Petal Waltz Live',
+    bpm: 132,
+    beats: 3,
+    swing: 0,
+    root: 72,
+    scale: MAJOR,
+    bars: [
+      { semi: 0, q: 'maj7' },
+      { semi: 5, q: 'maj7' },
+      { semi: 9, q: 'min7' },
+      { semi: 7, q: 'maj' },
+    ],
+    melody: [4, 7, 9, 7, 4, null, 5, 9, 11, 9, 5, null, 2, 4, 7, 4, 2, 0, 4, null, 2, null, null, null],
+    drum: 'waltz',
+    lead: 'flute',
+    energy: 0.85,
+  },
+  mermaid: {
+    title: 'Lagoon Shimmer',
+    liveTitle: 'Lagoon Shimmer Live',
+    bpm: 100,
+    beats: 4,
+    swing: 0.1,
+    root: 65,
+    scale: MAJOR,
+    bars: [
+      { semi: 0, q: 'maj7' },
+      { semi: 2, q: 'min7' },
+      { semi: 4, q: 'min7' },
+      { semi: 2, q: 'min7' },
+    ],
+    melody: [7, null, 6, 4, null, 2, 4, null, 7, null, 9, 7, null, 4, null, null, 6, null, 4, 2, null, 1, 2, null, 4, null, 2, 0, null, null, null, null],
+    drum: 'bossa',
+    lead: 'bell',
+    energy: 0.85,
+  },
+  space: {
+    title: 'Starlight Pop',
+    liveTitle: 'Starlight Pop Live',
+    bpm: 124,
+    beats: 4,
+    swing: 0,
+    root: 69,
+    scale: MINOR,
+    bars: [
+      { semi: 0, q: 'min' },
+      { semi: 8, q: 'maj' },
+      { semi: 3, q: 'maj' },
+      { semi: 10, q: 'maj' },
+    ],
+    melody: [7, 7, null, 9, 7, null, 4, null, 7, 7, null, 11, 9, null, 7, null, 4, 4, null, 6, 4, null, 2, null, 4, 7, 9, 7, 4, null, 2, null],
+    drum: 'house',
+    lead: 'stab',
+    energy: 1.1,
+  },
+  royal: {
+    title: 'Grand Entrance',
+    liveTitle: 'Grand Entrance Live',
+    bpm: 104,
+    beats: 4,
+    swing: 0,
+    root: 67,
+    scale: MAJOR,
+    bars: [
+      { semi: 0, q: 'maj' },
+      { semi: 5, q: 'maj' },
+      { semi: 7, q: 'maj' },
+      { semi: 0, q: 'maj' },
+    ],
+    melody: [0, null, 4, null, 7, null, null, 7, 9, 7, 5, 4, 2, null, null, null, 5, null, 9, null, 11, null, null, 9, 7, 9, 7, 5, 4, null, null, null],
+    drum: 'fanfare',
+    lead: 'brass',
+    energy: 1,
+  },
+  rock: {
+    title: 'Neon Stage',
+    liveTitle: 'Neon Stage Live',
+    bpm: 112,
+    beats: 4,
+    swing: 0.06,
+    root: 64,
+    scale: MIXO,
+    bars: [
+      { semi: 0, q: '7' },
+      { semi: 10, q: 'maj' },
+      { semi: 5, q: 'maj' },
+      { semi: 0, q: '7' },
+    ],
+    melody: [0, null, 0, 2, 4, null, 6, 4, 7, null, 6, 4, 2, null, 0, null, 0, null, 3, 4, null, 4, 6, 7, 9, 7, 6, 4, null, 2, 0, null],
+    drum: 'funk',
+    lead: 'clav',
+    energy: 1.1,
+  },
+  candy: {
+    title: 'Sugar Skip',
+    liveTitle: 'Sugar Skip Live',
+    bpm: 116,
+    beats: 4,
+    swing: 0.2,
+    root: 72,
+    scale: MAJOR,
+    bars: [
+      { semi: 0, q: 'maj' },
+      { semi: 4, q: 'min' },
+      { semi: 5, q: 'maj' },
+      { semi: 7, q: '7' },
+    ],
+    melody: [4, 2, 0, 2, 4, 4, 4, null, 2, 2, 2, null, 4, 7, 7, null, 4, 2, 0, 2, 4, 4, 4, 4, 2, 2, 4, 2, 0, null, null, null],
+    drum: 'pop',
+    lead: 'box',
+    energy: 0.95,
+  },
+};
+
 function midi(m: number): number {
   return 440 * 2 ** ((m - 69) / 12);
 }
@@ -219,6 +356,7 @@ class BoutiqueAudio {
   private nextTime = 0;
   private song: Song | null = null;
   private songKey = '';
+  private show: { key: string; live: boolean } | null = null;
   private mood: Mood = 'soft';
   private mode: Mode = 'off';
   private muted = false;
@@ -281,7 +419,10 @@ class BoutiqueAudio {
     }
     if (this.ctx.state === 'suspended') void this.ctx.resume();
     this.started = true;
-    if (!this.song) this.setBed(this.mood, this.mode === 'runway');
+    if (!this.song) {
+      if (this.show) this.setShow(this.show.key, this.show.live);
+      else this.setBed(this.mood, this.mode === 'runway');
+    }
     this.ensureClock();
   }
 
@@ -296,7 +437,69 @@ class BoutiqueAudio {
     this.setBed(this.mood, mode === 'runway');
   }
 
+  /** Game-show bed: lobby or a stage theme, live (runway remix) or not. */
+  setShow(key: string, live: boolean): void {
+    this.show = { key, live };
+    this.mode = live ? 'runway' : 'shop';
+    const base = SHOW_SONGS[key] ?? SHOW_SONGS.lobby;
+    const song = live ? this.remix(base) : base;
+    const id = `show:${key}:${live ? 'live' : 'set'}`;
+    if (!this.started || !this.ctx) return;
+    if (this.songKey === id) return;
+    this.songKey = id;
+    this.crossfade(song);
+  }
+
+  /** Short game-show sounds layered over the bed. */
+  stinger(kind: 'walk' | 'drumroll' | 'reveal' | 'through' | 'bow' | 'win' | 'paddle'): void {
+    if (!this.ctx || !this.started || !this.sfx) return;
+    const t0 = this.ctx.currentTime + 0.02;
+    const out = this.sfx;
+    const arp = (notes: number[], step: number, dur: number, type: OscillatorType, gain: number) =>
+      notes.forEach((n, i) => this.tone(midi(n), t0 + i * step, dur, type, gain, out));
+    switch (kind) {
+      case 'walk':
+        this.hit('kick', t0, 0.9);
+        this.hit('clap', t0 + 0.2, 0.7);
+        this.tone(midi(74), t0 + 0.2, 0.3, 'triangle', 0.05, out, { slide: midi(81) });
+        break;
+      case 'drumroll':
+        for (let i = 0; i < 14; i++) this.hit('snare', t0 + i * 0.07, 0.35 + i * 0.03);
+        break;
+      case 'reveal':
+        arp([67, 71, 74, 79], 0.06, 0.5, 'triangle', 0.05);
+        this.hit('open', t0, 0.6);
+        break;
+      case 'through':
+        arp([72, 76, 79, 84, 88], 0.09, 0.4, 'triangle', 0.05);
+        this.hit('clap', t0 + 0.36, 0.8);
+        break;
+      case 'bow':
+        arp([65, 69, 72], 0.14, 0.9, 'sine', 0.045);
+        window.setTimeout(() => {
+          if (!this.ctx) return;
+          const t = this.ctx.currentTime + 0.02;
+          [60, 64, 67, 72].forEach((n) => this.tone(midi(n), t, 1.2, 'sine', 0.035, out));
+        }, 520);
+        break;
+      case 'win':
+        arp([67, 72, 76, 79], 0.12, 0.35, 'sawtooth', 0.03);
+        window.setTimeout(() => {
+          if (!this.ctx) return;
+          const t = this.ctx.currentTime + 0.02;
+          [72, 76, 79, 84].forEach((n) => this.tone(midi(n), t, 1.4, 'triangle', 0.04, out, { filter: 2400 }));
+          this.hit('open', t, 0.9);
+        }, 520);
+        break;
+      case 'paddle':
+        this.hit('rim', t0, 0.8);
+        this.tone(midi(84), t0, 0.12, 'sine', 0.04, out);
+        break;
+    }
+  }
+
   setBed(mood: Mood, runway: boolean): void {
+    this.show = null;
     this.mood = mood;
     this.mode = runway ? 'runway' : 'shop';
     const base = SONGS[mood] ?? SONGS.soft;

@@ -219,6 +219,15 @@ const FORM: Record<string, Measure> = {
   }),
 };
 
+const BOY_TOP = { neckY: 150, neckHW: 26, neckDrop: 12, shoulderY: 172, shoulderHW: 80, underY: 204, underHW: 60, bustY: 228, bustHW: 74, waistY: 300, waistHW: 62, hipY: 340, hipHW: 70, hemRound: 4 };
+export const BOY_SKETCHES = new Set<string>(['sparkle-bomber', 'cozy-hoodie', 'garden-shirt', 'dance-tux', 'hero-cape-set', 'knit-set', 'party-zip', 'bold-blazer']);
+for (const id of BOY_SKETCHES) FORM[id] = m({ ...BOY_TOP, hemY: id === 'garden-shirt' ? 412 : 505, hemHW: 100 });
+
+/** Sketches with two legs: the seam runs down each leg instead of around a skirt. */
+export function isPants(id: string): boolean {
+  return id === 'palazzo' || id === 'jumpsuit' || BOY_SKETCHES.has(id);
+}
+
 function m(partial: Omit<Measure, 'cx'>): Measure {
   return { cx: 200, ...partial };
 }
@@ -623,7 +632,7 @@ function shadeDefs(uid: string): string {
 
 function folds(measure: Measure, sketch: SketchId): string {
   const skirts = sketch === 'puff-pencil' ? measure.hemHW : measure.hemHW;
-  const y0 = sketch === 'palazzo' || sketch === 'jumpsuit' ? measure.waistY + 20 : measure.waistY + 8;
+  const y0 = isPants(sketch) ? measure.waistY + 20 : measure.waistY + 8;
   const y1 = measure.hemY - 8;
   const lines = [-0.55, -0.22, 0.12, 0.42];
   return lines
@@ -646,7 +655,7 @@ function seamLines(measure: Measure, sketch: SketchId, gold: boolean): string {
   const extra =
     sketch === 'rain-coat' || sketch === 'crop-jacket'
       ? `M ${measure.cx} ${measure.neckY + measure.neckDrop + 8} L ${measure.cx - 4} ${measure.waistY + (sketch === 'crop-jacket' ? 16 : 40)}`
-      : sketch === 'jumpsuit' || sketch === 'palazzo'
+      : isPants(sketch)
         ? `M ${measure.cx - measure.waistHW} ${measure.waistY} Q ${measure.cx} ${measure.waistY + 6} ${measure.cx + measure.waistHW} ${measure.waistY}`
         : '';
   const d = [waist, sideL, sideR, extra].filter(Boolean).join(' ');
@@ -989,13 +998,18 @@ function wornFeet(outfit: Pick<Outfit, 'accessories' | 'color'>): string {
   return s;
 }
 
+/** Boys' outfits are sewn on their own shape: the form sprite in plain muslin. */
+export function muslinForm(id: SketchId): string {
+  return tintedSprite('form', id, '#EFE4D2', 'solid');
+}
+
 export function renderDressForm(
   outfit: Pick<Outfit, 'sketchId' | 'pattern' | 'color' | 'accessories'> | null,
   _uid: string,
   mode: 'fashion' | 'paper' | 'bare' = 'fashion',
 ): string {
   let href = sewForm('empty');
-  if (mode === 'paper') href = sewForm('pattern');
+  if (mode === 'paper') href = outfit && BOY_SKETCHES.has(outfit.sketchId) ? muslinForm(outfit.sketchId) : sewForm('pattern');
   else if (outfit?.color) href = tintedSprite('form', outfit.sketchId, outfit.color, outfit.pattern);
   const marks = mode === 'paper' && outfit ? `<g class="paper-marks">${paperDecor(outfit.sketchId)}</g>` : '';
   return `<svg class="dress-svg" viewBox="${FORM_VB}" preserveAspectRatio="xMidYMax meet">
@@ -1026,7 +1040,7 @@ export function stitchLayout(sketchId: SketchId): { pins: Pt[]; stitch: Pt[]; sn
     { x: measure.cx, y: measure.waistY - 6 },
   ];
   let stitch: Pt[];
-  if (sketchId === 'palazzo' || sketchId === 'jumpsuit') {
+  if (isPants(sketchId)) {
     stitch = [
       { x: measure.cx - measure.waistHW + 6, y: measure.waistY + 16 },
       { x: measure.cx - measure.hemHW * 0.42, y: measure.hemY - 16 },

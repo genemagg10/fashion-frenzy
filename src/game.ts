@@ -17,7 +17,7 @@ import {
   SKETCHES,
   THEMES,
 } from './data';
-import { renderDressForm, renderSketchDrawing } from './garments';
+import { BOY_SKETCHES, muslinForm, renderDressForm, renderSketchDrawing } from './garments';
 import { icon } from './icons';
 import { grade, liveGrade, wishFromTheme, type Draft, type Grade } from './score';
 import { sewKind, sewPlan, type SewKind } from './sew';
@@ -52,6 +52,9 @@ import type {
   Theme,
 } from './types';
 import { esc, saturation } from './color';
+import { gsAct, gsDebug, gsEnter, gsFiles, gsMount, gsMusic, gsSceneHtml, initGameShow } from './gameshow';
+import { avatarURL, lookFiles } from './gsavatar';
+import { gsTheme, type GsLook } from './gsdata';
 
 const save = loadSave();
 
@@ -172,6 +175,13 @@ export function boot(): void {
   audio.setMuted(save.muted);
   audio.onTrack = (title) => showNowPlaying(title);
   installAspectWatch();
+  initGameShow({
+    draw: () => draw(),
+    toast: (text) => toast(text),
+    hud: () => hud(),
+    saveLook: (look, theme, place) => saveShowLook(look, theme, place),
+  });
+  if (/debug/.test(location.search)) (window as unknown as { __ffGs: ReturnType<typeof gsDebug> }).__ffGs = gsDebug();
   const app = document.getElementById('app');
   if (!app) return;
   let origin: { x: number; y: number } | null = null;
@@ -194,6 +204,10 @@ export function boot(): void {
     onClick(event);
   });
   if (location.hash === '#gallery') session.scene = 'gallery';
+  else if (location.hash === '#showdown') {
+    gsEnter();
+    session.scene = 'gameshow';
+  }
   else if (location.hash === '#cover') session.scene = 'cover';
   draw();
 }
@@ -213,6 +227,7 @@ function showLoader(on: boolean): void {
 let paintToken = 0;
 
 function neededFiles(): string[] {
+  if (session.scene === 'gameshow') return gsFiles();
   const extra: string[] = [];
   const who = session.customer?.id;
   if (who) {
@@ -250,7 +265,10 @@ function neededFiles(): string[] {
   }
   if (session.scene === 'lookbook' || session.scene === 'awards') {
     const looks = session.scene === 'lookbook' ? save.lookbook : (session.show?.looks ?? []);
-    for (const look of looks) extra.push(`sprites/forms/${look.sketchId}.png`, `sprites/forms/${look.sketchId}.mask.png`);
+    for (const look of looks) {
+      if (look.gs) extra.push(...lookFiles(look.gs));
+      else extra.push(`sprites/forms/${look.sketchId}.png`, `sprites/forms/${look.sketchId}.mask.png`);
+    }
   }
   if (session.scene === 'reviews') {
     for (const review of save.reviews) {
@@ -323,6 +341,8 @@ function sceneHtml(): string {
       return reviewsScene();
     case 'cover':
       return coverScene();
+    case 'gameshow':
+      return gsSceneHtml();
     default:
       return titleScene();
   }
@@ -334,6 +354,7 @@ function mount(): (() => void) | void {
   if (session.scene === 'studio') return mountStudio();
   if (session.scene === 'runway') return mountRunway();
   if (session.scene === 'shop') return mountShop(document);
+  if (session.scene === 'gameshow') return gsMount();
   return undefined;
 }
 
@@ -348,6 +369,10 @@ function goto(scene: Scene): void {
 }
 
 function syncMusic(): void {
+  if (session.scene === 'gameshow') {
+    gsMusic();
+    return;
+  }
   const mood = session.customer?.mood ?? 'soft';
   audio.setBed(mood, session.scene === 'runway');
 }
@@ -384,6 +409,14 @@ function prepareShop(): void {
   session.draft = null;
   session.parade = false;
   session.leaveArmed = false;
+  const forced = /debug/.test(location.search) ? new URLSearchParams(location.search).get('customer') : null;
+  const pickForced = forced ? CUSTOMERS.find((c) => c.id === forced) : undefined;
+  if (pickForced) {
+    session.customer = { ...pickForced };
+    session.event = null;
+    session.bonus = 0;
+    return;
+  }
   if (!save.tutorialDone) {
     session.customer = { ...CUSTOMERS[0] };
     session.event = null;
@@ -475,12 +508,20 @@ function onClick(event: MouseEvent): void {
   }
   if (act !== 'mute' && act !== 'sketch-prev' && act !== 'sketch-next' && act !== 'cat' && act !== 'chandelier') audio.tap();
   const id = target.getAttribute('data-id') ?? '';
+  if (act.startsWith('gs-')) {
+    gsAct(act, id, target);
+    return;
+  }
   switch (act) {
     case 'mute':
       toggleMute();
       break;
     case 'open-shop':
       goto('shop');
+      break;
+    case 'open-show':
+      gsEnter();
+      goto('gameshow');
       break;
     case 'home':
       if (session.scene !== 'title') goto('title');
@@ -593,9 +634,11 @@ function onClick(event: MouseEvent): void {
       break;
     case 'lookbook':
       session.viewing = null;
+      if (session.scene !== 'lookbook') backScene = session.scene === 'shelf' ? backScene : session.scene;
       goto('lookbook');
       break;
     case 'shelf':
+      if (session.scene !== 'shelf') backScene = session.scene === 'lookbook' ? backScene : session.scene;
       goto('shelf');
       break;
     case 'open-look':
@@ -649,7 +692,7 @@ function isAccessory(id: string): id is AccessoryId {
 function hud(extra = ''): string {
   const deal = affordable();
   return `<header class="hud">
-    <button class="wordmark" data-act="home" type="button">Fashion Frenzy</button>
+    <button class="wordmark" data-act="home" type="button" aria-label="Fashion Frenzy, home"><span class="wm-a">Fashion</span><span class="wm-b">Frenzy</span><i class="wm-spark" aria-hidden="true"></i></button>
     <div class="hud-stats">
       <span class="stat stat-coins">${icon('coin')}<b>${save.coins}</b></span>
       <span class="stat">${icon('heart')}<b>${save.hearts}</b></span>
@@ -749,10 +792,13 @@ function titleScene(): string {
     <button class="icon-btn mute-corner" type="button" data-act="mute" aria-label="${save.muted ? 'Unmute' : 'Mute'}">${icon(save.muted ? 'mute' : 'sound')}</button>
     <div class="title-art"><img class="sprite title-model" alt="" src="${modelSignature('ball-gown')}"></div>
     <div class="title-copy">
-      <p class="kicker">a boutique game</p>
-      <h1>Fashion Frenzy</h1>
+      <p class="kicker">a fashion game</p>
+      <h1 class="title-lockup" aria-label="Fashion Frenzy"><span class="wm-a">Fashion</span> <span class="wm-b">Frenzy</span></h1>
       <p class="byline">by Ella</p>
-      <button class="btn" type="button" data-act="open-shop">Open the shop</button>
+      <div class="mode-pick" role="group" aria-label="Choose a game">
+        <button class="btn mode-btn" type="button" data-act="open-shop"><span class="mode-name">Open the shop</span><small>Sew for customers</small></button>
+        <button class="btn mode-btn mode-show" type="button" data-act="open-show"><span class="mode-name">Style Showdown</span><small>Game show · 3 stages</small></button>
+      </div>
     </div>
     <div class="sparkles" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
   </section>`;
@@ -830,7 +876,13 @@ function onPoster(): void {
 }
 
 function unlockedSketches(): typeof SKETCHES {
-  return SKETCHES.filter((sketch) => save.sketches.includes(sketch.id));
+  const boys = session.mode === 'customer' && Boolean(session.customer?.boy);
+  return SKETCHES.filter((sketch) => save.sketches.includes(sketch.id) && (sketch.line === 'boy') === boys);
+}
+
+/** "dress" or "outfit", depending on who is being dressed. */
+function garmentWord(): string {
+  return session.customer?.boy && session.mode === 'customer' ? 'outfit' : 'dress';
 }
 
 function sketchScene(): string {
@@ -1053,7 +1105,7 @@ function fabricControls(draft: Draft, active: string): string {
           </button>`)
         .join('')}</div>
     </div>
-    <div class="tool-pane ${active === 'trim' ? 'on' : ''}" data-pane="trim"><p class="note">Sew the dress, then pick a trim.</p></div>
+    <div class="tool-pane ${active === 'trim' ? 'on' : ''}" data-pane="trim"><p class="note">Sew the ${garmentWord()}, then pick a trim.</p></div>
     <button class="btn secondary" type="button" data-act="shelf">More cloth is on the shelf</button>
   </div>`;
 }
@@ -1065,7 +1117,7 @@ function finishControls(draft: Draft): string {
     <div class="tool-pane" data-pane="pattern"><p class="note">The cloth is set. Tap back if you want to change it.</p></div>
     <div class="tool-pane on" data-pane="trim"><div class="patterns trims">${owned
       .map((item) => `<button type="button" class="pat ${draft.accessories.includes(item.id) ? 'on' : ''}" data-act="accessory" data-id="${item.id}">
-        <i class="trim-icon"><img class="sprite" alt="" src="${trimURL(item.id)}"></i><span>${esc(item.name)}</span>
+        <i class="trim-icon"><img class="sprite" alt="" src="${trimURL(item.id)}"></i><span>${esc(item.id === 'bow' && garmentWord() === 'outfit' ? 'Bowtie' : item.name)}</span>
       </button>`)
       .join('')}</div></div>
   </div>`;
@@ -1152,7 +1204,13 @@ function mountSew(): () => void {
   svg.dataset.sewShape = plan.curved ? 'curved' : 'straight';
   const showSewPicture = (which: 'pattern' | 'half' | 'draped') => {
     const photo = svg.querySelector('#form-photo');
-    if (photo) photo.setAttribute('href', sewForm(which === 'half' ? 'half' : which === 'draped' ? 'draped' : 'pattern'));
+    if (!photo) return;
+    if (BOY_SKETCHES.has(draft.sketchId)) {
+      photo.setAttribute('href', which === 'half' && draft.color && draft.pattern ? tintedSprite('form', draft.sketchId, draft.color, draft.pattern) : muslinForm(draft.sketchId));
+      photo.classList.toggle('half-sewn', which === 'half');
+      return;
+    }
+    photo.setAttribute('href', sewForm(which === 'half' ? 'half' : which === 'draped' ? 'draped' : 'pattern'));
   };
   showSewPicture(step === 'stitch' ? 'half' : step === 'tap' ? 'draped' : 'pattern');
   let drawing = false;
@@ -1798,13 +1856,13 @@ function lookbookScene(): string {
   if (open) {
     return `${hud()}
       <div class="detail">
-        <div class="art">${renderDressForm(open, nextId('detail'))}</div>
+        <div class="art${open.gs ? ' gs-detail-art' : ''}">${open.gs ? `<img class="sprite gs-av" width="320" height="440" alt="" src="${avatarURL(open.gs)}">` : renderDressForm(open, nextId('detail'))}</div>
         <section class="panel">
           <button class="icon-btn" type="button" data-act="close-look" aria-label="Back">${icon('back')}</button>
           <h1>${esc(open.label ?? 'A look')}</h1>
           <div class="stars">${[1, 2, 3].map((n) => `<span class="${n <= (open.stars ?? 2) ? 'on' : ''}">${icon('star')}</span>`).join('')}</div>
-          <p class="hint">${esc(fabricById(open.pattern).name)} · ${esc(colorName(open.color))}</p>
-          <button class="btn" type="button" data-act="share-look">Save a picture</button>
+          <p class="hint">${open.gs ? 'Style Showdown look' : `${esc(fabricById(open.pattern).name)} · ${esc(colorName(open.color))}`}</p>
+          ${open.gs ? '' : '<button class="btn" type="button" data-act="share-look">Save a picture</button>'}
           <button class="btn ghost" type="button" data-act="drop-look" data-id="${esc(open.id)}">Let this one go</button>
         </section>
       </div>`;
@@ -1812,7 +1870,7 @@ function lookbookScene(): string {
   const cards = save.lookbook
     .map(
       (look) => `<button class="look-card" type="button" data-act="open-look" data-id="${esc(look.id)}">
-        <img class="sprite sprite-card" alt="" src="${modelSignature(look.sketchId)}">
+        <img class="sprite sprite-card${look.gs ? ' gs-card-av' : ''}" alt="" src="${look.gs ? avatarURL(look.gs) : modelSignature(look.sketchId)}">
         <span>${esc(look.label ?? sketchById(look.sketchId).name)}</span>
       </button>`,
     )
@@ -2431,7 +2489,34 @@ function goBack(): void {
     goto('title');
     return;
   }
+  if ((session.scene === 'lookbook' || session.scene === 'shelf') && (backScene === 'gameshow' || backScene === 'title')) {
+    goto(backScene);
+    return;
+  }
   returnToShop();
+}
+
+let backScene: Scene = 'shop';
+
+/** Keep a Style Showdown look in the Lookbook (with a ball-gown fallback for older builds). */
+function saveShowLook(look: GsLook, theme: string, place: number): boolean {
+  const key = `${look.outfit}|${look.hair}|${[...look.acc].sort().join(',')}|${look.skin}`;
+  if (save.lookbook.some((o) => o.gs && `${o.gs.outfit}|${o.gs.hair}|${[...o.gs.acc].sort().join(',')}|${o.gs.skin}` === key)) return false;
+  const outfit: Outfit = {
+    id: oid(),
+    sketchId: 'ball-gown',
+    pattern: 'solid',
+    color: '#E56B93',
+    accessories: [],
+    stars: place === 0 ? 3 : place <= 2 ? 2 : 1,
+    label: `${gsTheme(theme).name} · ${['1st', '2nd', '3rd', '4th', '5th', '6th'][place] ?? ''} place`,
+    themeId: theme,
+    gs: { kind: look.kind, skin: look.skin, outfit: look.outfit, hair: look.hair, acc: [...look.acc], theme, place },
+  };
+  save.lookbook.unshift(outfit);
+  if (save.lookbook.length > 24) save.lookbook.pop();
+  persist();
+  return true;
 }
 
 function toast(text: string): void {
