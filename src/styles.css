@@ -2203,3 +2203,28 @@ img.photog-sprite {
   .gs-podium .gs-card.slim { margin: 0 0 auto; align-self: center; width: auto; flex: 1; }
   .gs-podium .gs-big { font-size: 1.6rem; }
 }
+/* iPad portrait: a taller mirror, a roomier closet */
+@media (max-aspect-ratio: 4/5) and (min-width: 700px) {
+  .gs-dress { grid-template-rows: minmax(0, 1.3fr) minmax(0, 0.85fr); }
+  .gs-grid { grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); }
+}
+/* short landscape phones: result cards go side by side so New Run is always on screen */
+@media (max-height: 520px) and (orientation: landscape) {
+  .gs-through .gs-card, .gs-out .gs-card {
+    display: grid;
+    grid-template-columns: minmax(120px, 30%) minmax(0, 1fr);
+    column-gap: 16px;
+    width: min(100%, 720px);
+    text-align: left;
+    align-items: center;
+    justify-items: start;
+  }
+  .gs-through .gs-card > *, .gs-out .gs-card > * { grid-column: 2; }
+  .gs-through .gs-card > .gs-hero, .gs-out .gs-card > .gs-hero { grid-column: 1; grid-row: 1 / 9; height: min(64vh, 240px); justify-self: center; }
+  .gs-through .gs-sub, .gs-out .gs-sub { margin: 2px 0 6px; font-size: 0.86rem; }
+  .gs-tip { margin-bottom: 6px; padding: 6px 10px; font-size: 0.82rem; }
+  .gs-out .gs-row { justify-content: flex-start; margin-top: 4px; }
+  .gs-out .gs-row { flex-wrap: nowrap; width: 100%; }
+  .gs-out .gs-row .btn { min-height: 40px; width: auto; flex: 1 1 0; }
+  .gs-trophy { left: auto; right: 10px; top: 8px; width: 46px; height: 46px; }
+}

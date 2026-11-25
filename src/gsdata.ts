@@ -180,7 +180,7 @@ export const GS_ACCESSORIES: GsAccessory[] = [
   { id: 'shell-tiara', name: 'Shell Tiara', slot: 'head', themes: ['mermaid'], color: '#F4B8C8', w: 74, anchor: 'crown', dy: 4 },
   { id: 'star-antennae', name: 'Star Antennae', slot: 'head', themes: ['space'], color: '#CDB4E4', w: 96, anchor: 'band' },
   { id: 'cupcake-band', name: 'Cupcake Headband', slot: 'head', themes: ['candy'], color: '#F4B8C8', w: 86, anchor: 'band' },
-  { id: 'star-headphones', name: 'Star Headphones', slot: 'head', themes: ['rock', 'space'], color: '#F4B8C8', w: 104, anchor: 'ears' },
+  { id: 'star-headphones', name: 'Star Headphones', slot: 'head', themes: ['rock', 'space'], color: '#F4B8C8', w: 96, anchor: 'ears' },
   { id: 'lilac-bow', name: 'Big Bow', slot: 'head', themes: ['candy', 'fairy'], color: '#CDB4E4', w: 52, anchor: 'bow' },
   { id: 'heart-shades', name: 'Heart Shades', slot: 'face', themes: ['candy', 'rock'], color: '#E56B93', w: 64, anchor: 'eyes' },
   { id: 'star-shades', name: 'Star Shades', slot: 'face', themes: ['rock', 'space'], color: '#F6D56B', w: 66, anchor: 'eyes' },

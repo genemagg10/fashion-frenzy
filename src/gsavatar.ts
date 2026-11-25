@@ -109,7 +109,7 @@ export function accBox(item: GsAccessory, outfit: string, img: { w: number; h: n
     case 'band':
       return { x: X - w / 2 + dx, y: C - 34 - h + dy, w, h };
     case 'ears':
-      return { x: X - w / 2 + dx, y: C - 22 - h + dy, w, h };
+      return { x: X - w / 2 + dx, y: C - 24 - h * 0.72 + dy, w, h };
     case 'bow':
       return { x: X + 30 - w / 2 + dx, y: C - 82 - h / 2 + dy, w, h };
     case 'eyes':
@@ -162,6 +162,17 @@ export function avatarURL(look: GsLook): string {
     const img = peekSprite(accFile(item.id));
     if (!img) return;
     const box = accBox(item, look.outfit, size(img));
+    if (item.anchor === 'ears') {
+      // Headphones: split at the middle so each cup sits on an ear; the band stretches between.
+      const { w: sw, h: sh } = size(img);
+      const half = sw / 2;
+      const gap = 54;
+      const hw = box.w / 2;
+      g.drawImage(img, 0, 0, half, sh, box.x - gap / 2, box.y, hw, box.h);
+      g.drawImage(img, half, 0, half, sh, box.x + hw + gap / 2, box.y, hw, box.h);
+      g.drawImage(img, half - 1, 0, 2, sh, box.x + hw - gap / 2 - 0.5, box.y, gap + 1, box.h);
+      return;
+    }
     g.drawImage(img, box.x, box.y, box.w, box.h);
   };
   const outfit = gsOutfit(look.outfit);
