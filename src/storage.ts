@@ -1,4 +1,5 @@
 import { STARTER_ACCESSORIES, STARTER_FABRICS, STARTER_SKETCHES } from './data';
+import { GS_ACCESSORIES, GS_HAIR, GS_OUTFITS, GS_THEMES } from './gsdata';
 import type {
   AccessoryId,
   DecorId,
@@ -45,6 +46,14 @@ const FABRIC_IDS = new Set<string>([
   'rainbow',
 ]);
 const SKETCH_IDS = new Set<string>([
+  'sparkle-bomber',
+  'cozy-hoodie',
+  'garden-shirt',
+  'dance-tux',
+  'hero-cape-set',
+  'knit-set',
+  'party-zip',
+  'bold-blazer',
   'sunny-dress',
   'rain-coat',
   'twirl-set',
@@ -82,6 +91,19 @@ function asList<T extends string>(value: unknown, allowed: Set<string>): T[] {
   return out;
 }
 
+function asGs(value: unknown): Outfit['gs'] | undefined {
+  if (!value || typeof value !== 'object') return undefined;
+  const g = value as Record<string, unknown>;
+  if (g.kind !== 'girl' && g.kind !== 'boy') return undefined;
+  if (typeof g.outfit !== 'string' || !GS_OUTFITS.some((o) => o.id === g.outfit)) return undefined;
+  if (typeof g.hair !== 'string' || !GS_HAIR.some((h) => h.id === g.hair)) return undefined;
+  if (typeof g.skin !== 'string' || !/^#[0-9a-fA-F]{6}$/.test(g.skin)) return undefined;
+  const acc = Array.isArray(g.acc) ? g.acc.filter((a): a is string => typeof a === 'string' && GS_ACCESSORIES.some((x) => x.id === a)).slice(0, 5) : [];
+  const theme = typeof g.theme === 'string' && GS_THEMES.some((t) => t.id === g.theme) ? g.theme : 'fairy';
+  const place = typeof g.place === 'number' ? Math.max(0, Math.min(5, Math.round(g.place))) : 0;
+  return { kind: g.kind, skin: g.skin, outfit: g.outfit, hair: g.hair, acc, theme, place };
+}
+
 function asOutfit(value: unknown): Outfit | null {
   if (!value || typeof value !== 'object') return null;
   const o = value as Record<string, unknown>;
@@ -100,6 +122,8 @@ function asOutfit(value: unknown): Outfit | null {
   if (typeof o.stars === 'number') outfit.stars = Math.max(1, Math.min(3, Math.round(o.stars)));
   if (typeof o.label === 'string') outfit.label = o.label.slice(0, 80);
   if (typeof o.themeId === 'string') outfit.themeId = o.themeId.slice(0, 40);
+  const gs = asGs(o.gs);
+  if (gs) outfit.gs = gs;
   return outfit;
 }
 

@@ -11,7 +11,16 @@ export function sewKind(id: SketchId): SewKind {
     case 'rain-coat':
     case 'crop-jacket':
     case 'cherry-kimono':
+    case 'dance-tux':
+    case 'knit-set':
+    case 'bold-blazer':
       return 'buttons';
+    case 'sparkle-bomber':
+    case 'cozy-hoodie':
+    case 'party-zip':
+      return 'zipper';
+    case 'garden-shirt':
+      return 'hem';
     case 'jumpsuit':
     case 'palazzo':
     case 'mermaid-gown':

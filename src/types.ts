@@ -31,7 +31,15 @@ export type SketchId =
   | 'ice-crystal'
   | 'candy-party'
   | 'peacock-train'
-  | 'cherry-kimono';
+  | 'cherry-kimono'
+  | 'sparkle-bomber'
+  | 'cozy-hoodie'
+  | 'garden-shirt'
+  | 'dance-tux'
+  | 'hero-cape-set'
+  | 'knit-set'
+  | 'party-zip'
+  | 'bold-blazer';
 
 export type AccessoryId = 'bow' | 'buttons' | 'sequins' | 'belt' | 'hat' | 'bag' | 'shoes';
 
@@ -63,7 +71,8 @@ export type Scene =
   | 'shelf'
   | 'gallery'
   | 'cover'
-  | 'reviews';
+  | 'reviews'
+  | 'gameshow';
 
 export interface PersonLook {
   skin: string;
@@ -108,6 +117,8 @@ export interface Customer extends PersonLook {
   mood: Mood;
   show?: boolean;
   fancy?: boolean;
+  /** Boy customers get the boys' line of sketches. */
+  boy?: boolean;
   wish: Wish;
   board: BoardBit[];
 }
@@ -121,6 +132,8 @@ export interface Outfit {
   stars?: number;
   label?: string;
   themeId?: string;
+  /** A Style Showdown look (game-show mode). Older saves simply do not have it. */
+  gs?: { kind: 'girl' | 'boy'; skin: string; outfit: string; hair: string; acc: string[]; theme: string; place: number };
 }
 
 export interface Theme {

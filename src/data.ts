@@ -26,6 +26,8 @@ export interface SketchInfo {
   tags: string[];
   price: number;
   starter?: boolean;
+  /** The boys' line: only boy customers see these sketches. */
+  line?: 'boy';
 }
 
 export interface AccessoryInfo {
@@ -255,6 +257,86 @@ export const SKETCHES: SketchInfo[] = [
     tags: ['floral', 'soft', 'party'],
     price: 75,
   },
+  {
+    id: 'sparkle-bomber',
+    name: 'Sparkle Bomber',
+    blurb: 'A shiny jacket for a big night.',
+    note: 'Ribbed cuffs, a front zip, and a little sparkle.',
+    tags: ['sparkly', 'party', 'bold'],
+    price: 0,
+    starter: true,
+    line: 'boy',
+  },
+  {
+    id: 'cozy-hoodie',
+    name: 'Cozy Hoodie',
+    blurb: 'Soft, warm, and ready to hang out.',
+    note: 'A roomy hood, a front pocket and joggers.',
+    tags: ['cozy', 'soft'],
+    price: 0,
+    starter: true,
+    line: 'boy',
+  },
+  {
+    id: 'garden-shirt',
+    name: 'Garden Shirt',
+    blurb: 'A breezy shirt with shorts.',
+    note: 'Short sleeves, a collar, and room to run.',
+    tags: ['floral', 'soft', 'cozy'],
+    price: 0,
+    starter: true,
+    line: 'boy',
+  },
+  {
+    id: 'dance-tux',
+    name: 'Dance Tux',
+    blurb: 'Sharp enough for the first dance.',
+    note: 'A neat jacket, a crisp shirt and a bowtie spot.',
+    tags: ['party', 'bold', 'sparkly'],
+    price: 0,
+    starter: true,
+    line: 'boy',
+  },
+  {
+    id: 'hero-cape-set',
+    name: 'Hero Cape Set',
+    blurb: 'For rescuing the day.',
+    note: 'A cape that swooshes over a smart top and pants.',
+    tags: ['cape', 'bold', 'party'],
+    price: 0,
+    starter: true,
+    line: 'boy',
+  },
+  {
+    id: 'knit-set',
+    name: 'Knit Vest Set',
+    blurb: 'A sweater vest over a collared shirt.',
+    note: 'Cozy knit on top, comfy pants below.',
+    tags: ['cozy', 'soft'],
+    price: 0,
+    starter: true,
+    line: 'boy',
+  },
+  {
+    id: 'party-zip',
+    name: 'Party Zip-Up',
+    blurb: 'A track jacket made for dancing.',
+    note: 'Stripes down the sleeves, a zip up the front.',
+    tags: ['party', 'twirl', 'sparkly'],
+    price: 0,
+    starter: true,
+    line: 'boy',
+  },
+  {
+    id: 'bold-blazer',
+    name: 'Bold Blazer',
+    blurb: 'A strong shape for the spotlight.',
+    note: 'Sharp shoulders and big buttons.',
+    tags: ['bold', 'cozy'],
+    price: 0,
+    starter: true,
+    line: 'boy',
+  },
 ];
 
 export const ACCESSORIES: AccessoryInfo[] = [
@@ -302,6 +384,7 @@ export const CUSTOMERS: Customer[] = [
   {
     id: 'theo',
     name: 'Theo',
+    boy: true,
     skin: '#F6D3BA',
     hair: 'crop',
     hairColor: '#4A3428',
@@ -370,6 +453,7 @@ export const CUSTOMERS: Customer[] = [
   {
     id: 'amos',
     name: 'Amos',
+    boy: true,
     skin: '#5C3A2A',
     hair: 'pony',
     hairColor: '#1A120E',
